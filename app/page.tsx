@@ -2,6 +2,18 @@
 
 import { FormEvent, useEffect, useRef, useState } from "react";
 
+type TimeTheme = "day" | "night";
+
+function getUkTimeTheme(): TimeTheme {
+  const hour = Number(new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Europe/London",
+    hour: "2-digit",
+    hourCycle: "h23",
+  }).format(new Date()));
+
+  return hour >= 7 && hour < 19 ? "day" : "night";
+}
+
 const navItems = [
   { id: "home", label: "Home", short: "Home", icon: "home" },
   { id: "airport", label: "Airport transfers", short: "Airport", icon: "plane" },
@@ -25,6 +37,8 @@ function Icon({ name }: { name: string }) {
     car: <><path d="m5 10 2-5h10l2 5"/><path d="M4 10h16l1 3v6h-3v-2H6v2H3v-6Z"/><circle cx="7" cy="13.5" r="1"/><circle cx="17" cy="13.5" r="1"/></>,
     luggage: <><rect x="6" y="8" width="12" height="13" rx="2"/><path d="M9 8V5h6v3M9 12v5M15 12v5M9 24h0M15 24h0"/></>,
     arrow: <><path d="M4 12h15M14 7l5 5-5 5"/></>,
+    sun: <><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.66 6.34l1.41-1.41"/></>,
+    moon: <path d="M20.5 14.2A8.4 8.4 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7Z"/>,
   };
 
   return (
@@ -51,11 +65,25 @@ export default function Home() {
   const [active, setActive] = useState("home");
   const [menuOpen, setMenuOpen] = useState(false);
   const [formMessage, setFormMessage] = useState("");
+  const [automaticTheme, setAutomaticTheme] = useState<TimeTheme>("night");
+  const [themeOverride, setThemeOverride] = useState<TimeTheme | null>(null);
+  const theme = themeOverride ?? automaticTheme;
+
+  const toggleTheme = () => {
+    setThemeOverride((current) => current === null ? (automaticTheme === "day" ? "night" : "day") : null);
+  };
 
   const goTo = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start", inline: "start" });
     setMenuOpen(false);
   };
+
+  useEffect(() => {
+    const updateTheme = () => setAutomaticTheme(getUkTimeTheme());
+    updateTheme();
+    const timer = window.setInterval(updateTheme, 60_000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     const root = scroller.current;
@@ -91,7 +119,7 @@ export default function Home() {
   };
 
   return (
-    <div className="site-shell">
+    <div className="site-shell" data-theme={theme}>
       <aside className="side-rail" aria-label="Main navigation">
         <button className="brand-button" onClick={() => goTo("home")} aria-label="MF Travel home"><Wordmark /></button>
         <nav className="rail-nav">
@@ -101,12 +129,20 @@ export default function Home() {
             </button>
           ))}
         </nav>
+        <button className="theme-toggle theme-toggle--rail" onClick={toggleTheme} aria-label={themeOverride === null ? `Switch to ${theme === "day" ? "night" : "day"} theme` : "Use automatic UK-time theme"}>
+          <Icon name={theme === "day" ? "sun" : "moon"} />
+          <span>{theme === "day" ? "Day" : "Night"}</span>
+          <small>{themeOverride === null ? "UK time" : "Manual"}</small>
+        </button>
         <div className="rail-note"><span>Hull</span><small>Pre-booked travel</small></div>
       </aside>
 
       <header className="mobile-header">
         <button className="brand-button" onClick={() => goTo("home")} aria-label="MF Travel home"><Wordmark compact /></button>
-        <button className={`menu-button${menuOpen ? " open" : ""}`} onClick={() => setMenuOpen((value) => !value)} aria-label="Toggle navigation" aria-expanded={menuOpen}><span /><span /><span /></button>
+        <div className="mobile-actions">
+          <button className="theme-toggle theme-toggle--mobile" onClick={toggleTheme} aria-label={themeOverride === null ? `Switch to ${theme === "day" ? "night" : "day"} theme` : "Use automatic UK-time theme"}><Icon name={theme === "day" ? "sun" : "moon"} /></button>
+          <button className={`menu-button${menuOpen ? " open" : ""}`} onClick={() => setMenuOpen((value) => !value)} aria-label="Toggle navigation" aria-expanded={menuOpen}><span /><span /><span /></button>
+        </div>
         {menuOpen && <div className="mobile-menu">{navItems.map((item) => <button key={item.id} onClick={() => goTo(item.id)}>{item.label}</button>)}</div>}
       </header>
 
