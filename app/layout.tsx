@@ -1,10 +1,49 @@
 import type { Metadata } from "next";
 import "./globals.css";
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://mf-travel.onrender.com";
+
 export const metadata: Metadata = {
-  title: "MF Travel | Airport Transfers & Pre-Booked Travel from Hull",
-  description: "MF Travel provides pre-booked airport transfers and long-distance private-hire travel from Hull.",
-  keywords: ["Hull airport transfers", "airport transfer Hull", "private hire Hull", "long distance taxi Hull", "MF Travel"],
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: "MF Travel | Airport Transfers from Hull",
+    template: "%s | MF Travel Hull",
+  },
+  description: "Pre-booked airport transfers from Hull and East Riding to Manchester, Leeds Bradford, Humberside, East Midlands, Liverpool, Newcastle and Birmingham.",
+  keywords: [
+    "Hull airport transfers",
+    "airport taxi Hull",
+    "Manchester Airport transfer Hull",
+    "Leeds Bradford Airport transfer Hull",
+    "Humberside Airport taxi",
+    "East Midlands Airport transfer Hull",
+    "Liverpool Airport transfer Hull",
+    "Newcastle Airport transfer Hull",
+    "Birmingham Airport transfer Hull",
+    "airport transfers East Riding",
+    "Beverley airport transfers",
+    "Cottingham airport transfers",
+    "Hessle airport transfers",
+    "long distance taxi Hull",
+    "private hire Hull",
+    "MF Travel Hull",
+  ],
+  alternates: { canonical: "/" },
+  openGraph: {
+    type: "website",
+    locale: "en_GB",
+    siteName: "MF Travel",
+    title: "MF Travel | Airport Transfers from Hull",
+    description: "Journeys that matter. Pre-booked airport transfers and long-distance travel from Hull and East Riding.",
+    images: [{ url: "/mf-travel-airport-hero.webp", width: 1536, height: 1024, alt: "MF Travel airport transfer vehicles" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "MF Travel | Airport Transfers from Hull",
+    description: "Journeys that matter. Pre-booked airport transfers and long-distance travel from Hull and East Riding.",
+    images: ["/mf-travel-airport-hero.webp"],
+  },
+  robots: { index: true, follow: true },
   other: { "codex-preview": "development" },
   icons: { icon: "/favicon.svg", shortcut: "/favicon.svg" },
 };
