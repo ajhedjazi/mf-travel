@@ -39,13 +39,48 @@ test("renders development preview metadata", async () => {
   assert.match(html, /"price":145/);
   assert.match(html, /"price":195/);
 
+  const airportHubResponse = await worker.fetch(
+    new Request("http://localhost/airport-transfers"),
+    env,
+    ctx,
+  );
+  assert.equal(airportHubResponse.status, 200);
+  const airportHubHtml = await airportHubResponse.text();
+  assert.match(airportHubHtml, /Airport transfers/i);
+  assert.match(airportHubHtml, /hull-to-manchester-airport/i);
+  assert.match(airportHubHtml, /hull-to-leeds-bradford-airport/i);
+
+  const manchesterResponse = await worker.fetch(
+    new Request("http://localhost/airport-transfers/hull-to-manchester-airport"),
+    env,
+    ctx,
+  );
+  assert.equal(manchesterResponse.status, 200);
+  const manchesterHtml = await manchesterResponse.text();
+  assert.match(manchesterHtml, /Hull to Manchester Airport Transfer/i);
+  assert.match(manchesterHtml, /Guide fare from Hull/i);
+  assert.match(manchesterHtml, /£145/);
+
+  const humbersideResponse = await worker.fetch(
+    new Request("http://localhost/airport-transfers/hull-to-humberside-airport"),
+    env,
+    ctx,
+  );
+  assert.equal(humbersideResponse.status, 200);
+  const humbersideHtml = await humbersideResponse.text();
+  assert.match(humbersideHtml, /closest commercial airport to Hull/i);
+  assert.match(humbersideHtml, /£50/);
+
   const sitemapResponse = await worker.fetch(
     new Request("http://localhost/sitemap.xml"),
     env,
     ctx,
   );
   assert.equal(sitemapResponse.status, 200);
-  assert.match(await sitemapResponse.text(), /mf-travel\.onrender\.com/i);
+  const sitemapXml = await sitemapResponse.text();
+  assert.match(sitemapXml, /mf-travel\.onrender\.com/i);
+  assert.match(sitemapXml, /airport-transfers\/hull-to-manchester-airport/i);
+  assert.match(sitemapXml, /airport-transfers\/hull-to-liverpool-airport/i);
 
   const robotsResponse = await worker.fetch(
     new Request("http://localhost/robots.txt"),

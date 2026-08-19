@@ -1,24 +1,11 @@
 "use client";
 
 import { FormEvent, useEffect, useRef, useState } from "react";
+import { allAirportFares } from "./airport-transfers/route-data";
 
 type TimeTheme = "day" | "night";
 
-type Fare = {
-  airport: string;
-  price: number;
-  note: string;
-};
-
-const fares: Fare[] = [
-  { airport: "Humberside Airport", price: 50, note: "Approx. 22 miles" },
-  { airport: "Leeds Bradford Airport", price: 100, note: "Approx. 72 miles" },
-  { airport: "Manchester Airport", price: 145, note: "Approx. 112 miles" },
-  { airport: "East Midlands Airport", price: 150, note: "Approx. 105 miles" },
-  { airport: "Liverpool John Lennon Airport", price: 165, note: "Approx. 125 miles" },
-  { airport: "Newcastle International Airport", price: 190, note: "Approx. 135 miles" },
-  { airport: "Birmingham Airport", price: 195, note: "Approx. 135 miles" },
-];
+const fares = allAirportFares;
 
 const faqItems = [
   {
@@ -169,6 +156,15 @@ export default function Home() {
     updateTheme();
     const timer = window.setInterval(updateTheme, 60_000);
     return () => window.clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    const destination = new URLSearchParams(window.location.search).get("destination");
+    const timer = window.setTimeout(() => {
+      if (destination) setJourneyDestination(destination);
+      if (window.location.hash === "#quote") goTo("quote");
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, []);
 
   useEffect(() => {
@@ -340,7 +336,7 @@ export default function Home() {
               <article><span>02</span><div><h3>One clear quote</h3><p>Your confirmation states the agreed journey and which airport or parking charges are included.</p></div></article>
               <article><span>03</span><div><h3>Outward and return</h3><p>Arrange Manchester, Leeds Bradford, Humberside and other airport journeys in one request.</p></div></article>
             </div>
-            <button className="button button--line" onClick={() => goTo("fares")}>View airport fares <Icon name="arrow" /></button>
+            <a className="button button--line" href="/airport-transfers">View airport routes <Icon name="arrow" /></a>
           </div>
           <div className="editorial-card editorial-card--airport"><span className="card-number">A</span><div><Icon name="plane" /><p>Hull to the terminal</p><small>Pre-booked. Planned. Personal.</small></div></div>
           <PanelCount current={2} />
@@ -354,9 +350,15 @@ export default function Home() {
             <p className="fare-smallprint">Guide fares are for a direct journey from Hull with one pickup, one drop-off, normal luggage and the standard airport charge included. Your exact address, date, stops, passengers and luggage are confirmed in the final quote.</p>
           </div>
           <div className="fare-board" aria-label="Airport guide fares">
-            {fares.map((fare) => (
-              <button key={fare.airport} onClick={() => chooseFare(fare.airport)}>
-                <span><strong>{fare.airport}</strong><small>{fare.note}</small></span>
+            {fares.map((fare) => fare.slug ? (
+              <a className="fare-row" href={`/airport-transfers/${fare.slug}`} key={fare.airport}>
+                <span><strong>{fare.airport}</strong><small>{fare.note} · View route</small></span>
+                <span className="fare-price"><small>guide</small>£{fare.price}</span>
+                <Icon name="arrow" />
+              </a>
+            ) : (
+              <button className="fare-row" key={fare.airport} onClick={() => chooseFare(fare.airport)}>
+                <span><strong>{fare.airport}</strong><small>{fare.note} · Request quote</small></span>
                 <span className="fare-price"><small>guide</small>£{fare.price}</span>
                 <Icon name="arrow" />
               </button>

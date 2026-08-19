@@ -1,14 +1,31 @@
 import type { MetadataRoute } from "next";
+import { airportRoutes } from "./airport-transfers/route-data";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://mf-travel.onrender.com";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  return [
+  const staticPages: MetadataRoute.Sitemap = [
     {
       url: siteUrl,
       lastModified: new Date(),
       changeFrequency: "monthly",
       priority: 1,
     },
+    {
+      url: `${siteUrl}/airport-transfers`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.9,
+    },
+  ];
+
+  return [
+    ...staticPages,
+    ...airportRoutes.map((route) => ({
+      url: `${siteUrl}/airport-transfers/${route.slug}`,
+      lastModified: new Date(),
+      changeFrequency: "monthly" as const,
+      priority: 0.8,
+    })),
   ];
 }
