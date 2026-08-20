@@ -321,7 +321,7 @@ export default function Home() {
             <div><Icon name="clock" /><p><strong>Day or night</strong><span>Pre-booked around your flight</span></p></div>
             <div><Icon name="price" /><p><strong>Clear quote</strong><span>Know the agreed fare</span></p></div>
             <div><Icon name="person" /><p><strong>Personal</strong><span>A local two-person team</span></p></div>
-            <div><Icon name="car" /><p><strong>Comfortable</strong><span>Two estate-class cars</span></p></div>
+            <div><Icon name="car" /><p><strong>Comfortable</strong><span>Two spacious cars</span></p></div>
           </div>
           <PanelCount current={1} />
         </section>
@@ -377,7 +377,7 @@ export default function Home() {
           </div>
           <div className="fleet-grid">
             <article className="fleet-card fleet-card--volvo"><div className="fleet-photo" aria-hidden="true" /><span>01</span><div><p>White</p><h3>2019 Volvo V60 R-Line</h3><small>Estate · Up to 4 passengers</small></div></article>
-            <article className="fleet-card fleet-card--insignia"><div className="fleet-photo" aria-hidden="true" /><span>02</span><div><p>Arctic Silver</p><h3>2017 Vauxhall Insignia</h3><small>Hatchback · Up to 4 passengers</small></div></article>
+            <article className="fleet-card fleet-card--insignia"><div className="fleet-photo" aria-hidden="true" /><span>02</span><div><p>Arctic Silver</p><h3>2017 Vauxhall Insignia</h3><small>500-litre boot · Up to 4 passengers</small></div></article>
           </div>
           <PanelCount current={4} />
         </section>
