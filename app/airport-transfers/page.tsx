@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { airportRoutes } from "./route-data";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://mf-travel.onrender.com";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://mftravel.co.uk";
 
 export const metadata: Metadata = {
   title: "Airport Transfers from Hull",

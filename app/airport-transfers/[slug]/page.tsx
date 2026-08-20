@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { airportRoutes, getAirportRoute } from "../route-data";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://mf-travel.onrender.com";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://mftravel.co.uk";
 
 type RoutePageProps = {
   params: Promise<{ slug: string }>;

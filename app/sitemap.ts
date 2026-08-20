@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 import { airportRoutes } from "./airport-transfers/route-data";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://mf-travel.onrender.com";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://mftravel.co.uk";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const staticPages: MetadataRoute.Sitemap = [
