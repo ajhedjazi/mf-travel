@@ -122,8 +122,8 @@ h1 em, h2 em { color: var(--gold-light); font-style: normal; }
 .fleet-grid { height: min(68vh, 660px); display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
 .fleet-card { position: relative; min-width: 0; overflow: hidden; border: 1px solid rgba(216,154,73,.25); background: #0a202b; }
 .fleet-photo { position: absolute; inset: 0; background-image: linear-gradient(0deg, rgba(5,18,25,.98) 0%, rgba(5,18,25,.58) 34%, rgba(5,18,25,.08) 70%), url("/mf-travel-airport-hero.webp"); background-size: auto 100%, auto 100%; background-repeat: no-repeat; transition: transform .45s, filter .45s; }
-.fleet-card--volvo .fleet-photo { background-position: center, 83% center; }
-.fleet-card--insignia .fleet-photo { background-position: center, 34% center; }
+.fleet-card--volvo .fleet-photo { background-position: center, 34% center; }
+.fleet-card--insignia .fleet-photo { background-position: center, 83% center; }
 .fleet-card:hover .fleet-photo { transform: scale(1.025); filter: brightness(1.08); }
 .fleet-card > span { position: absolute; top: 25px; right: 25px; color: rgba(240,188,117,.72); font: italic 20px Georgia, serif; }
 .fleet-card > div:last-child { position: absolute; right: 28px; bottom: 30px; left: 28px; }
@@ -271,8 +271,8 @@ h1 em, h2 em { color: var(--gold-light); font-style: normal; }
   .fare-board .fare-price { font-size: 27px; }
   .fleet-grid { height: auto; margin-top: 40px; grid-template-columns: 1fr; }
   .fleet-card { min-height: 420px; }
-  .fleet-card--volvo .fleet-photo { background-position: center, 74% center; }
-  .fleet-card--insignia .fleet-photo { background-position: center, 28% center; }
+  .fleet-card--volvo .fleet-photo { background-position: center, 28% center; }
+  .fleet-card--insignia .fleet-photo { background-position: center, 74% center; }
   .distance-panel { display: flex; flex-direction: column; }
   .route-art { order: 2; width: 100%; height: 390px; min-height: 0; margin-top: 45px; }
   .distance-panel .panel-copy { order: 1; }
