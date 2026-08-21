@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="MF Travel">
+  <rect width="64" height="64" rx="11" fill="#F6F3EC"/>
+  <g transform="translate(-4 -1) scale(.17)">
+    <path fill="#071923" d="M54 332c18-3 29-17 29-39V112h45v181c0 22 11 36 29 39v8H54v-8Z"/>
+    <path fill="#071923" d="M243 332c18-3 29-17 29-39V111h45v182c0 22 11 36 29 39v8H243v-8Z"/>
+    <path fill="#071923" d="M68 66h58l76 94 73-94h59L202 230 68 66Z"/>
+    <path fill="#C9974B" d="M252 141c20-39 47-75 91-75h45v18c0 28-20 51-50 57h-86Z"/>
+    <path fill="#C9974B" d="M283 169h78l-8 18c-7 17-23 28-42 28h-28v-46Z"/>
+  </g>
+</svg>

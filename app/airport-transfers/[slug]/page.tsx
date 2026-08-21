@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import BrandLogo from "../../brand-logo";
 import { airportRoutes, getAirportRoute } from "../route-data";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://mftravel.co.uk";
@@ -100,7 +101,7 @@ export default async function AirportRoutePage({ params }: RoutePageProps) {
     <div className="route-site">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
       <header className="route-header">
-        <a className="route-brand" href="/" aria-label="MF Travel home"><strong>MF</strong><span>Travel</span></a>
+        <a className="route-brand" href="/" aria-label="MF Travel home"><BrandLogo tone="light" className="brand-logo--route" /></a>
         <nav aria-label="Airport route navigation">
           <a href="/">Home</a>
           <a href="/airport-transfers">Airport transfers</a>

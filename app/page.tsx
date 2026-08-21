@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { allAirportFares } from "./airport-transfers/route-data";
+import BrandLogo from "./brand-logo";
 
 type TimeTheme = "day" | "night";
 
@@ -98,14 +99,6 @@ function Icon({ name }: { name: string }) {
     <svg className="icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       {paths[name]}
     </svg>
-  );
-}
-
-function Wordmark({ compact = false }: { compact?: boolean }) {
-  return (
-    <div className={`wordmark${compact ? " wordmark--compact" : ""}`} aria-label="MF Travel">
-      <span>MF</span><small>Travel</small>
-    </div>
   );
 }
 
@@ -280,7 +273,7 @@ export default function Home() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
 
       <aside className="side-rail" aria-label="Main navigation">
-        <button className="brand-button" onClick={() => goTo("home")} aria-label="MF Travel home"><Wordmark /></button>
+        <button className="brand-button" onClick={() => goTo("home")} aria-label="MF Travel home"><BrandLogo variant="icon" className="brand-logo--rail" /></button>
         <nav className="rail-nav">
           {navItems.map((item) => (
             <button key={item.id} className={active === item.id ? "active" : ""} onClick={() => goTo(item.id)} aria-current={active === item.id ? "page" : undefined}>
@@ -297,7 +290,7 @@ export default function Home() {
       </aside>
 
       <header className="mobile-header">
-        <button className="brand-button" onClick={() => goTo("home")} aria-label="MF Travel home"><Wordmark compact /></button>
+        <button className="brand-button" onClick={() => goTo("home")} aria-label="MF Travel home"><BrandLogo className="brand-logo--mobile" /></button>
         <div className="mobile-actions">
           <button className="theme-toggle theme-toggle--mobile" onClick={toggleTheme} aria-label={themeOverride === null ? `Switch to ${theme === "day" ? "night" : "day"} theme` : "Use automatic UK-time theme"}><Icon name={theme === "day" ? "sun" : "moon"} /></button>
           <button className={`menu-button${menuOpen ? " open" : ""}`} onClick={() => setMenuOpen((value) => !value)} aria-label="Toggle navigation" aria-expanded={menuOpen}><span /><span /><span /></button>

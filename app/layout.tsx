@@ -26,7 +26,7 @@ export const metadata: Metadata = {
     images: ["/mf-travel-airport-hero.webp"],
   },
   robots: { index: true, follow: true },
-  icons: { icon: "/favicon.svg", shortcut: "/favicon.svg" },
+  icons: { icon: "/favicon-mf.svg", shortcut: "/favicon-mf.svg" },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

@@ -1,6 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="MF Travel">
-  <rect width="64" height="64" rx="11" fill="#071923"/>
-  <g transform="translate(5 5) scale(.135)">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" role="img" aria-labelledby="title desc">
+  <title id="title">MF Travel light monogram</title>
+  <desc id="desc">An intertwined warm cream M and F with two warm gold strokes for dark backgrounds.</desc>
+  <g>
     <path fill="#F6F3EC" d="M54 332c18-3 29-17 29-39V112h45v181c0 22 11 36 29 39v8H54v-8Z"/>
     <path fill="#F6F3EC" d="M243 332c18-3 29-17 29-39V111h45v182c0 22 11 36 29 39v8H243v-8Z"/>
     <path fill="#F6F3EC" d="M68 66h58l76 94 73-94h59L202 230 68 66Z"/>
