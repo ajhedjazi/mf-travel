@@ -1,5 +1,5 @@
 type BrandLogoProps = {
-  variant?: "icon" | "horizontal";
+  variant?: "icon" | "horizontal" | "stacked";
   tone?: "adaptive" | "light" | "dark";
   className?: string;
 };

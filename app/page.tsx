@@ -273,7 +273,7 @@ export default function Home() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
 
       <aside className="side-rail" aria-label="Main navigation">
-        <button className="brand-button" onClick={() => goTo("home")} aria-label="MF Travel home"><BrandLogo variant="icon" className="brand-logo--rail" /></button>
+        <button className="brand-button" onClick={() => goTo("home")} aria-label="MF Travel home"><BrandLogo variant="stacked" className="brand-logo--rail" /></button>
         <nav className="rail-nav">
           {navItems.map((item) => (
             <button key={item.id} className={active === item.id ? "active" : ""} onClick={() => goTo(item.id)} aria-current={active === item.id ? "page" : undefined}>

@@ -1,10 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="MF Travel">
-  <rect width="64" height="64" rx="11" fill="#071923"/>
-  <g transform="translate(5 5) scale(.135)">
-    <path fill="#F6F3EC" d="M54 332c18-3 29-17 29-39V112h45v181c0 22 11 36 29 39v8H54v-8Z"/>
-    <path fill="#F6F3EC" d="M243 332c18-3 29-17 29-39V111h45v182c0 22 11 36 29 39v8H243v-8Z"/>
-    <path fill="#F6F3EC" d="M68 66h58l76 94 73-94h59L202 230 68 66Z"/>
-    <path fill="#C9974B" d="M252 141c20-39 47-75 91-75h45v18c0 28-20 51-50 57h-86Z"/>
-    <path fill="#C9974B" d="M283 169h78l-8 18c-7 17-23 28-42 28h-28v-46Z"/>
+  <rect width="64" height="64" rx="11" fill="#F6F3EC"/>
+  <g transform="matrix(.105 0 0 .13 1.5 8)">
+    <path fill="#071923" d="M24 284c27-5 42-22 42-53V88H32V68h119v20h-29v143c0 31 15 48 43 53v10H24v-10Z"/>
+    <path fill="#071923" d="M337 284c27-5 42-22 42-53V88h-28V68h109v20h-25v143c0 31 15 48 43 53v10H337v-10Z"/>
+    <path fill="#071923" d="M37 48h108l118 110L363 48h113L263 228 37 48Z"/>
+    <path fill="#C9974B" d="M344 48h190v18c0 43-35 78-78 78H289c17-32 36-64 55-96Z"/>
+    <path fill="#C9974B" d="M380 161h121l-10 21c-13 29-42 48-75 48h-36v-69Z"/>
   </g>
 </svg>

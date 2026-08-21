@@ -23,13 +23,13 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .site-shell { min-height: 100dvh; background: var(--navy-950); }
 .side-rail { position: fixed; inset: 0 auto 0 0; z-index: 30; width: var(--rail); display: flex; flex-direction: column; background: rgba(5, 22, 31, 0.97); border-right: 1px solid rgba(255,255,255,.06); box-shadow: 22px 0 55px rgba(0,0,0,.2); }
 .brand-button { appearance: none; border: 0; background: none; cursor: pointer; }
-.side-rail .brand-button { display: grid; place-items: center; height: 126px; min-height: 100px; border-bottom: 1px solid rgba(255,255,255,.06); }
+.side-rail .brand-button { display: grid; place-items: center; height: 156px; min-height: 138px; padding: 14px; border-bottom: 1px solid rgba(255,255,255,.06); }
 .brand-logo { display: inline-flex; align-items: center; line-height: 0; }
 .brand-logo img { display: block; width: 100%; height: auto; }
 .brand-logo__day { display: none !important; }
 .site-shell[data-theme="day"] .brand-logo--adaptive .brand-logo__night { display: none; }
 .site-shell[data-theme="day"] .brand-logo--adaptive .brand-logo__day { display: block !important; }
-.brand-logo--rail { width: 76px; }
+.brand-logo--rail { width: 138px; max-width: 100%; }
 .brand-logo--mobile { width: 184px; max-width: 48vw; }
 .brand-logo--route { width: 210px; }
 .rail-nav { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 10px 0; }
@@ -212,7 +212,8 @@ h1 em, h2 em { color: var(--gold-light); font-style: normal; }
 
 @media (max-width: 1180px) {
   :root { --rail: 132px; }
-  .brand-logo--rail { width: 66px; }
+  .side-rail .brand-button { height: 142px; min-height: 126px; padding-inline: 11px; }
+  .brand-logo--rail { width: 110px; }
   .rail-nav button { min-height: clamp(45px, 6.8vh, 61px); }
   .trust-strip { padding-left: 20px; padding-right: 20px; }
   .trust-strip > div { padding: 8px 18px; gap: 12px; }
@@ -308,8 +309,8 @@ h1 em, h2 em { color: var(--gold-light); font-style: normal; }
 }
 
 @media (max-height: 760px) and (min-width: 821px) {
-  .side-rail .brand-button { height: 88px; min-height: 88px; }
-  .brand-logo--rail { width: 56px; }
+  .side-rail .brand-button { height: 110px; min-height: 110px; padding: 9px 12px; }
+  .brand-logo--rail { width: 104px; }
   .rail-nav button { min-height: 45px; }
   .rail-nav .icon { width: 18px; height: 18px; }
   .rail-nav span { font-size: 8px; }
