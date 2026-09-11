@@ -1,0 +1,1 @@
+Implementation note: this branch intentionally keeps Apple Maps as a fallback. The embedded web map uses TomTom tiles/search/routing from the browser for the Monday prototype. Full native turn-by-turn guidance can be evaluated after the first live airport-run test.
