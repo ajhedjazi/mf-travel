@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import styles from '../prototype.module.css';
+import TomTomMap from './TomTomMap';
 
 type Booking = {
   id: string;
@@ -40,6 +41,11 @@ export default function DriverPage() {
     return `https://maps.apple.com/?daddr=${destination}&dirflg=d`;
   }, [booking]);
 
+  const phoneHref = useMemo(() => {
+    if (!booking?.phone) return '#';
+    return `tel:${booking.phone.replace(/\s+/g, '')}`;
+  }, [booking]);
+
   function advance() {
     if (!booking) return;
     const current = flow.indexOf(booking.status);
@@ -56,9 +62,9 @@ export default function DriverPage() {
           <Link href="/">MF Travel</Link><span>·</span><Link href="/book">Book</Link><span>·</span><Link href="/admin">Dispatch</Link><span>·</span><Link href="/driver">Driver</Link>
         </nav>
 
-        <p className={styles.eyebrow}>Driver app</p>
-        <h1 className={styles.title}>Today&apos;s job.</h1>
-        <p className={styles.sub}>This is the bit you would actually use from the car: destination, passenger, status and one big next-action button.</p>
+        <p className={styles.eyebrow}>MF Travel driver</p>
+        <h1 className={styles.title}>Current job.</h1>
+        <p className={styles.sub}>Your job, live TomTom route, traffic-aware ETA and the next action in one screen.</p>
 
         {!booking ? (
           <section className={styles.card}>
@@ -70,6 +76,8 @@ export default function DriverPage() {
           <section className={styles.card}>
             <span className={styles.status}>{booking.status.replaceAll('_', ' ')}</span>
             <div className={styles.route}>{booking.pickup} → {booking.destination}</div>
+
+            <TomTomMap destination={booking.destination} />
 
             <div className={styles.meta}>
               <div className={styles.metaBox}><div className={styles.metaLabel}>Pickup</div><strong>{booking.date} · {booking.time}</strong></div>
@@ -84,7 +92,8 @@ export default function DriverPage() {
             </div>
 
             <div className={styles.buttonRow}>
-              <a className={styles.secondary} href={mapsHref} target="_blank" rel="noreferrer">Navigate in Apple Maps</a>
+              <a className={styles.secondary} href={phoneHref}>Call passenger</a>
+              <a className={styles.secondary} href={mapsHref} target="_blank" rel="noreferrer">Apple Maps fallback</a>
               {booking.status !== 'COMPLETED' && (
                 <button className={styles.primary} type="button" onClick={advance}>
                   {labels[booking.status] || 'Start job'}
