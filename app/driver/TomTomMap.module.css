@@ -47,6 +47,36 @@
   cursor: pointer;
 }
 
+.refreshButton:disabled {
+  cursor: not-allowed;
+  opacity: .55;
+}
+
+.routeWarning {
+  display: grid;
+  gap: 3px;
+  padding: 12px 16px;
+  background: #f6dfae;
+  color: #654a14;
+  border-bottom: 1px solid rgba(18, 59, 58, .12);
+}
+
+.routeWarning strong {
+  font-size: 13px;
+  letter-spacing: .05em;
+}
+
+.routeWarning span {
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.routeWarningDanger {
+  background: #ffd1c8;
+  color: #7b2e2e;
+}
+
 .departure {
   display: grid;
   gap: 3px;
