@@ -26,6 +26,7 @@ const MAPLIBRE_JS = 'https://unpkg.com/maplibre-gl@6.9.0/dist/maplibre-gl.js';
 const MAPLIBRE_CSS = 'https://unpkg.com/maplibre-gl@6.9.0/dist/maplibre-gl.css';
 const EARLY_ARRIVAL_MINUTES = 10;
 const ROUTE_REFRESH_MS = 2 * 60 * 1000;
+const STALE_ROUTE_MS = 5 * 60 * 1000;
 const FORECAST_CUTOFF_MINUTES = 5;
 
 function loadMapLibre(): Promise<any> {
@@ -108,8 +109,11 @@ export default function TomTomMap({ target, pickupDate, pickupTime, showDepartur
   const [now, setNow] = useState(() => new Date());
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [isForecast, setIsForecast] = useState(false);
+  const [isOnline, setIsOnline] = useState(true);
 
   useEffect(() => {
+    setIsOnline(navigator.onLine);
+
     const clock = window.setInterval(() => setNow(new Date()), 30_000);
     const routeRefresh = window.setInterval(() => setRefreshTick((value) => value + 1), ROUTE_REFRESH_MS);
     const refreshOnFocus = () => {
@@ -119,14 +123,27 @@ export default function TomTomMap({ target, pickupDate, pickupTime, showDepartur
     const refreshOnVisibility = () => {
       if (document.visibilityState === 'visible') refreshOnFocus();
     };
+    const handleOnline = () => {
+      setIsOnline(true);
+      setNow(new Date());
+      setRefreshTick((value) => value + 1);
+    };
+    const handleOffline = () => {
+      setIsOnline(false);
+      setNow(new Date());
+    };
 
     window.addEventListener('focus', refreshOnFocus);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
     document.addEventListener('visibilitychange', refreshOnVisibility);
 
     return () => {
       window.clearInterval(clock);
       window.clearInterval(routeRefresh);
       window.removeEventListener('focus', refreshOnFocus);
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
       document.removeEventListener('visibilitychange', refreshOnVisibility);
     };
   }, []);
@@ -146,6 +163,10 @@ export default function TomTomMap({ target, pickupDate, pickupTime, showDepartur
         return;
       }
       if (!containerRef.current || !target) return;
+      if (!navigator.onLine) {
+        setMessage('You are offline. Reconnect for a fresh TomTom route; Apple Maps fallback remains available below.');
+        return;
+      }
 
       try {
         const [maplibregl, position] = await Promise.all([loadMapLibre(), getPosition()]);
@@ -265,6 +286,8 @@ export default function TomTomMap({ target, pickupDate, pickupTime, showDepartur
     };
   }, [target, pickupDate, pickupTime, showDepartureAdvice, refreshTick]);
 
+  const isStale = Boolean(lastUpdated && now.getTime() - lastUpdated.getTime() > STALE_ROUTE_MS);
+
   const departure = useMemo(() => {
     if (!showDepartureAdvice || !summary?.travelTimeInSeconds) return null;
     const pickup = parsePickup(pickupDate, pickupTime);
@@ -293,10 +316,29 @@ export default function TomTomMap({ target, pickupDate, pickupTime, showDepartur
           <strong>{target}</strong>
           {lastUpdated && <small>Updated {formatClock(lastUpdated)} · {isForecast ? 'forecast route' : 'live route'}</small>}
         </div>
-        <button className={styles.refreshButton} type="button" onClick={() => setRefreshTick((value) => value + 1)}>
-          Refresh route
+        <button
+          className={styles.refreshButton}
+          type="button"
+          disabled={!isOnline}
+          onClick={() => setRefreshTick((value) => value + 1)}
+        >
+          {isOnline ? 'Refresh route' : 'Offline'}
         </button>
       </div>
+
+      {!isOnline && (
+        <div className={`${styles.routeWarning} ${styles.routeWarningDanger}`} role="alert">
+          <strong>OFFLINE</strong>
+          <span>Do not rely on this ETA. Reconnect for fresh traffic data or use Apple Maps fallback below.</span>
+        </div>
+      )}
+
+      {isOnline && isStale && (
+        <div className={styles.routeWarning} role="status">
+          <strong>ROUTE DATA IS STALE</strong>
+          <span>Last successful update was over 5 minutes ago. Refresh before relying on the departure time.</span>
+        </div>
+      )}
 
       {departure && (
         <div className={`${styles.departure} ${styles[`departure_${departure.tone}`]}`}>
