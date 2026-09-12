@@ -6,6 +6,69 @@
   margin: 18px 0;
 }
 
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px;
+  background: #fffdf8;
+  border-bottom: 1px solid rgba(18, 59, 58, .12);
+}
+
+.toolbar > div {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.toolbar strong {
+  color: #123b3a;
+  font-size: 15px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.toolbar small {
+  color: #6a7f7e;
+  font-size: 11px;
+}
+
+.refreshButton {
+  min-height: 44px;
+  flex: 0 0 auto;
+  border: 0;
+  border-radius: 999px;
+  padding: 0 16px;
+  background: #123b3a;
+  color: white;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.departure {
+  display: grid;
+  gap: 3px;
+  padding: 14px 16px;
+  color: #123b3a;
+  border-bottom: 1px solid rgba(18, 59, 58, .12);
+}
+
+.departure strong {
+  font-size: 24px;
+  letter-spacing: -.02em;
+}
+
+.departure span {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.departure_ok { background: #dbe9df; }
+.departure_soon { background: #f6dfae; }
+.departure_go { background: #ffd1c8; color: #7b2e2e; }
+
 .map {
   width: 100%;
   height: min(46vh, 420px);
@@ -67,6 +130,19 @@
     margin-left: -2px;
     margin-right: -2px;
     border-radius: 16px;
+  }
+
+  .toolbar {
+    align-items: stretch;
+  }
+
+  .refreshButton {
+    min-height: 48px;
+    padding: 0 14px;
+  }
+
+  .departure strong {
+    font-size: 28px;
   }
 
   .map {
