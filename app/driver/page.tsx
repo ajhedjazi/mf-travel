@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import styles from '../prototype.module.css';
 import TomTomMap from './TomTomMap';
 
@@ -19,6 +19,18 @@ type Booking = {
   driver: string | null;
 };
 
+type WakeLockHandle = {
+  released?: boolean;
+  release: () => Promise<void>;
+  addEventListener?: (type: 'release', listener: () => void) => void;
+};
+
+type NavigatorWithWakeLock = Navigator & {
+  wakeLock?: {
+    request: (type: 'screen') => Promise<WakeLockHandle>;
+  };
+};
+
 const flow = ['ASSIGNED', 'DRIVER_EN_ROUTE', 'ARRIVED', 'PASSENGER_ON_BOARD', 'COMPLETED'];
 const labels: Record<string, string> = {
   ASSIGNED: 'Start job',
@@ -29,11 +41,76 @@ const labels: Record<string, string> = {
 
 export default function DriverPage() {
   const [booking, setBooking] = useState<Booking | null>(null);
+  const [keepAwake, setKeepAwake] = useState(false);
+  const [wakeLockAvailable, setWakeLockAvailable] = useState(true);
+  const [wakeLockMessage, setWakeLockMessage] = useState<string | null>(null);
+  const wakeLockRef = useRef<WakeLockHandle | null>(null);
 
   useEffect(() => {
     const stored = localStorage.getItem('mf-travel-demo-booking');
     if (stored) setBooking(JSON.parse(stored));
+    setWakeLockAvailable(Boolean((navigator as NavigatorWithWakeLock).wakeLock));
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function requestWakeLock() {
+      if (!keepAwake || document.visibilityState !== 'visible') return;
+      const wakeLock = (navigator as NavigatorWithWakeLock).wakeLock;
+      if (!wakeLock) {
+        setWakeLockAvailable(false);
+        setKeepAwake(false);
+        setWakeLockMessage('Screen wake lock is not supported in this browser.');
+        return;
+      }
+
+      try {
+        const handle = await wakeLock.request('screen');
+        if (cancelled) {
+          await handle.release();
+          return;
+        }
+        wakeLockRef.current = handle;
+        setWakeLockMessage('Screen will stay awake while the driver app is visible.');
+        handle.addEventListener?.('release', () => {
+          if (!cancelled) wakeLockRef.current = null;
+        });
+      } catch {
+        if (!cancelled) {
+          setWakeLockMessage('Could not keep the screen awake. Check browser permissions or keep the phone on charge.');
+        }
+      }
+    }
+
+    async function releaseWakeLock() {
+      const handle = wakeLockRef.current;
+      wakeLockRef.current = null;
+      if (handle && !handle.released) {
+        try {
+          await handle.release();
+        } catch {
+          // Wake lock can already be released automatically when the tab is hidden.
+        }
+      }
+    }
+
+    if (keepAwake) requestWakeLock();
+    else releaseWakeLock();
+
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible' && keepAwake && !wakeLockRef.current) {
+        requestWakeLock();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      cancelled = true;
+      document.removeEventListener('visibilitychange', handleVisibility);
+      releaseWakeLock();
+    };
+  }, [keepAwake]);
 
   const navigationTarget = useMemo(() => {
     if (!booking) return '';
@@ -107,6 +184,10 @@ export default function DriverPage() {
               <div className={styles.step}><span>Booking ref</span><strong>{booking.id}</strong></div>
               <div className={styles.step}><span>Flight</span><strong>{booking.flight || '—'}</strong></div>
               <div className={styles.step}><span>Assigned driver</span><strong>{booking.driver || 'Not yet assigned'}</strong></div>
+              <div className={styles.step}>
+                <span>Keep screen awake</span>
+                <strong>{keepAwake ? 'On' : wakeLockAvailable ? 'Off' : 'Unavailable'}</strong>
+              </div>
             </div>
 
             <div className={`${styles.buttonRow} ${styles.driverActions}`}>
@@ -115,11 +196,25 @@ export default function DriverPage() {
                   {labels[booking.status] || 'Start job'}
                 </button>
               )}
+              {wakeLockAvailable && (
+                <button
+                  className={styles.secondary}
+                  type="button"
+                  aria-pressed={keepAwake}
+                  onClick={() => {
+                    setWakeLockMessage(null);
+                    setKeepAwake((value) => !value);
+                  }}
+                >
+                  {keepAwake ? 'Allow screen sleep' : 'Keep screen awake'}
+                </button>
+              )}
               <a className={styles.secondary} href={phoneHref}>Call passenger</a>
               <a className={styles.secondary} href={smsHref}>Text passenger</a>
               <a className={styles.secondary} href={mapsHref} target="_blank" rel="noreferrer">Apple Maps fallback</a>
             </div>
 
+            {wakeLockMessage && <p className={styles.small}>{wakeLockMessage}</p>}
             {booking.status === 'COMPLETED' && <p className={styles.sub}><strong>Journey complete.</strong> Next step later will be payment capture, receipt and earnings.</p>}
           </section>
         )}
