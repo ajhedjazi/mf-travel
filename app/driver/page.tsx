@@ -35,11 +35,18 @@ export default function DriverPage() {
     if (stored) setBooking(JSON.parse(stored));
   }, []);
 
-  const mapsHref = useMemo(() => {
-    if (!booking) return '#';
-    const destination = encodeURIComponent(booking.destination);
-    return `https://maps.apple.com/?daddr=${destination}&dirflg=d`;
+  const navigationTarget = useMemo(() => {
+    if (!booking) return '';
+    return ['PASSENGER_ON_BOARD', 'COMPLETED'].includes(booking.status)
+      ? booking.destination
+      : booking.pickup;
   }, [booking]);
+
+  const mapsHref = useMemo(() => {
+    if (!navigationTarget) return '#';
+    const target = encodeURIComponent(navigationTarget);
+    return `https://maps.apple.com/?daddr=${target}&dirflg=d`;
+  }, [navigationTarget]);
 
   const phoneHref = useMemo(() => {
     if (!booking?.phone) return '#';
@@ -77,7 +84,12 @@ export default function DriverPage() {
             <span className={styles.status}>{booking.status.replaceAll('_', ' ')}</span>
             <div className={styles.route}>{booking.pickup} → {booking.destination}</div>
 
-            <TomTomMap destination={booking.destination} />
+            <TomTomMap
+              target={navigationTarget}
+              pickupDate={booking.date}
+              pickupTime={booking.time}
+              showDepartureAdvice={!['PASSENGER_ON_BOARD', 'COMPLETED'].includes(booking.status)}
+            />
 
             <div className={styles.meta}>
               <div className={styles.metaBox}><div className={styles.metaLabel}>Pickup</div><strong>{booking.date} · {booking.time}</strong></div>
@@ -86,6 +98,7 @@ export default function DriverPage() {
             </div>
 
             <div className={styles.steps}>
+              <div className={styles.step}><span>Navigation target</span><strong>{navigationTarget}</strong></div>
               <div className={styles.step}><span>Booking ref</span><strong>{booking.id}</strong></div>
               <div className={styles.step}><span>Flight</span><strong>{booking.flight || '—'}</strong></div>
               <div className={styles.step}><span>Assigned driver</span><strong>{booking.driver || 'Not yet assigned'}</strong></div>
