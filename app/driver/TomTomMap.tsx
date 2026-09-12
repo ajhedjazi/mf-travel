@@ -26,6 +26,7 @@ const MAPLIBRE_JS = 'https://unpkg.com/maplibre-gl@6.9.0/dist/maplibre-gl.js';
 const MAPLIBRE_CSS = 'https://unpkg.com/maplibre-gl@6.9.0/dist/maplibre-gl.css';
 const EARLY_ARRIVAL_MINUTES = 10;
 const ROUTE_REFRESH_MS = 2 * 60 * 1000;
+const FORECAST_CUTOFF_MINUTES = 5;
 
 function loadMapLibre(): Promise<any> {
   if (window.maplibregl) return Promise.resolve(window.maplibregl);
@@ -93,6 +94,10 @@ function parsePickup(date: string, time: string) {
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 }
 
+function toTomTomDateTime(date: Date) {
+  return date.toISOString().replace(/\.\d{3}Z$/, 'Z');
+}
+
 export default function TomTomMap({ target, pickupDate, pickupTime, showDepartureAdvice }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<any>(null);
@@ -102,13 +107,27 @@ export default function TomTomMap({ target, pickupDate, pickupTime, showDepartur
   const [refreshTick, setRefreshTick] = useState(0);
   const [now, setNow] = useState(() => new Date());
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [isForecast, setIsForecast] = useState(false);
 
   useEffect(() => {
     const clock = window.setInterval(() => setNow(new Date()), 30_000);
     const routeRefresh = window.setInterval(() => setRefreshTick((value) => value + 1), ROUTE_REFRESH_MS);
+    const refreshOnFocus = () => {
+      setNow(new Date());
+      setRefreshTick((value) => value + 1);
+    };
+    const refreshOnVisibility = () => {
+      if (document.visibilityState === 'visible') refreshOnFocus();
+    };
+
+    window.addEventListener('focus', refreshOnFocus);
+    document.addEventListener('visibilitychange', refreshOnVisibility);
+
     return () => {
       window.clearInterval(clock);
       window.clearInterval(routeRefresh);
+      window.removeEventListener('focus', refreshOnFocus);
+      document.removeEventListener('visibilitychange', refreshOnVisibility);
     };
   }, []);
 
@@ -119,6 +138,7 @@ export default function TomTomMap({ target, pickupDate, pickupTime, showDepartur
     async function start() {
       setError(null);
       setSummary(null);
+      setIsForecast(false);
       setMessage('Getting your position and calculating the route…');
 
       if (!key) {
@@ -171,7 +191,18 @@ export default function TomTomMap({ target, pickupDate, pickupTime, showDepartur
         new maplibregl.Marker({ color: '#123b3a' }).setLngLat(origin).addTo(map);
         new maplibregl.Marker({ color: '#d89a49' }).setLngLat(destination).addTo(map);
 
-        const routeUrl = `https://api.tomtom.com/routing/1/calculateRoute/${origin[1]},${origin[0]}:${destination[1]},${destination[0]}/json?key=${encodeURIComponent(key)}&traffic=true&travelMode=car&routeType=fastest`;
+        const pickup = showDepartureAdvice ? parsePickup(pickupDate, pickupTime) : null;
+        const desiredArrival = pickup
+          ? new Date(pickup.getTime() - EARLY_ARRIVAL_MINUTES * 60_000)
+          : null;
+        const shouldForecast = Boolean(
+          desiredArrival && desiredArrival.getTime() - Date.now() > FORECAST_CUTOFF_MINUTES * 60_000,
+        );
+        const timingParam = shouldForecast && desiredArrival
+          ? `&arriveAt=${encodeURIComponent(toTomTomDateTime(desiredArrival))}`
+          : '';
+
+        const routeUrl = `https://api.tomtom.com/routing/1/calculateRoute/${origin[1]},${origin[0]}:${destination[1]},${destination[0]}/json?key=${encodeURIComponent(key)}&traffic=true&travelMode=car&routeType=fastest${timingParam}`;
         const routeResponse = await fetch(routeUrl);
         if (!routeResponse.ok) throw new Error('Route calculation failed');
         const routeData = await routeResponse.json();
@@ -180,7 +211,8 @@ export default function TomTomMap({ target, pickupDate, pickupTime, showDepartur
 
         if (cancelled) return;
         setSummary(route.summary ?? null);
-        setMessage('Live TomTom route');
+        setIsForecast(shouldForecast);
+        setMessage(shouldForecast ? 'TomTom pickup-time traffic forecast' : 'Live TomTom route');
         setLastUpdated(new Date());
 
         const points = route.legs?.flatMap((leg: any) => leg.points ?? []) ?? [];
@@ -231,7 +263,7 @@ export default function TomTomMap({ target, pickupDate, pickupTime, showDepartur
       mapRef.current?.remove?.();
       mapRef.current = null;
     };
-  }, [target, refreshTick]);
+  }, [target, pickupDate, pickupTime, showDepartureAdvice, refreshTick]);
 
   const departure = useMemo(() => {
     if (!showDepartureAdvice || !summary?.travelTimeInSeconds) return null;
@@ -242,15 +274,16 @@ export default function TomTomMap({ target, pickupDate, pickupTime, showDepartur
       pickup.getTime() - (summary.travelTimeInSeconds + EARLY_ARRIVAL_MINUTES * 60) * 1000,
     );
     const minutesUntilLeave = Math.round((leaveBy.getTime() - now.getTime()) / 60_000);
+    const forecastLabel = isForecast ? ' · pickup-time traffic forecast' : ' · live traffic';
 
     if (minutesUntilLeave <= 0) {
-      return { tone: 'go', label: 'GO NOW', detail: `Leave by ${formatClock(leaveBy)} · aim to arrive ${EARLY_ARRIVAL_MINUTES} min early` };
+      return { tone: 'go', label: 'GO NOW', detail: `Leave by ${formatClock(leaveBy)} · aim to arrive ${EARLY_ARRIVAL_MINUTES} min early${forecastLabel}` };
     }
     if (minutesUntilLeave <= 15) {
-      return { tone: 'soon', label: `LEAVE IN ${minutesUntilLeave} MIN`, detail: `Leave by ${formatClock(leaveBy)} · aim to arrive ${EARLY_ARRIVAL_MINUTES} min early` };
+      return { tone: 'soon', label: `LEAVE IN ${minutesUntilLeave} MIN`, detail: `Leave by ${formatClock(leaveBy)} · aim to arrive ${EARLY_ARRIVAL_MINUTES} min early${forecastLabel}` };
     }
-    return { tone: 'ok', label: 'ON TIME', detail: `Leave by ${formatClock(leaveBy)} · ${minutesUntilLeave} min until departure` };
-  }, [now, pickupDate, pickupTime, showDepartureAdvice, summary]);
+    return { tone: 'ok', label: 'ON TIME', detail: `Leave by ${formatClock(leaveBy)} · ${minutesUntilLeave} min until departure${forecastLabel}` };
+  }, [isForecast, now, pickupDate, pickupTime, showDepartureAdvice, summary]);
 
   return (
     <div className={styles.mapCard}>
@@ -258,7 +291,7 @@ export default function TomTomMap({ target, pickupDate, pickupTime, showDepartur
         <div>
           <span className={styles.label}>Routing to</span>
           <strong>{target}</strong>
-          {lastUpdated && <small>Updated {formatClock(lastUpdated)}</small>}
+          {lastUpdated && <small>Updated {formatClock(lastUpdated)} · {isForecast ? 'forecast route' : 'live route'}</small>}
         </div>
         <button className={styles.refreshButton} type="button" onClick={() => setRefreshTick((value) => value + 1)}>
           Refresh route
@@ -275,9 +308,9 @@ export default function TomTomMap({ target, pickupDate, pickupTime, showDepartur
       <div ref={containerRef} className={styles.map} aria-label={`TomTom route to ${target}`} />
       {summary ? (
         <div className={styles.summary}>
-          <div><span className={styles.label}>Drive time</span><span className={styles.value}>{formatDuration(summary.travelTimeInSeconds)}</span></div>
+          <div><span className={styles.label}>{isForecast ? 'Forecast drive time' : 'Drive time'}</span><span className={styles.value}>{formatDuration(summary.travelTimeInSeconds)}</span></div>
           <div><span className={styles.label}>Distance</span><span className={styles.value}>{formatDistance(summary.lengthInMeters)}</span></div>
-          <div><span className={styles.label}>Traffic delay</span><span className={styles.value}>+{formatDuration(summary.trafficDelayInSeconds)}</span></div>
+          <div><span className={styles.label}>{isForecast ? 'Forecast delay' : 'Traffic delay'}</span><span className={styles.value}>+{formatDuration(summary.trafficDelayInSeconds)}</span></div>
         </div>
       ) : (
         <div className={`${styles.notice} ${error ? styles.error : ''}`}>{message}{error ? ` (${error})` : ''}</div>
