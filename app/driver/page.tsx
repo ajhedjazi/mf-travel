@@ -53,6 +53,11 @@ export default function DriverPage() {
     return `tel:${booking.phone.replace(/\s+/g, '')}`;
   }, [booking]);
 
+  const smsHref = useMemo(() => {
+    if (!booking?.phone) return '#';
+    return `sms:${booking.phone.replace(/\s+/g, '')}`;
+  }, [booking]);
+
   function advance() {
     if (!booking) return;
     const current = flow.indexOf(booking.status);
@@ -104,14 +109,15 @@ export default function DriverPage() {
               <div className={styles.step}><span>Assigned driver</span><strong>{booking.driver || 'Not yet assigned'}</strong></div>
             </div>
 
-            <div className={styles.buttonRow}>
-              <a className={styles.secondary} href={phoneHref}>Call passenger</a>
-              <a className={styles.secondary} href={mapsHref} target="_blank" rel="noreferrer">Apple Maps fallback</a>
+            <div className={`${styles.buttonRow} ${styles.driverActions}`}>
               {booking.status !== 'COMPLETED' && (
-                <button className={styles.primary} type="button" onClick={advance}>
+                <button className={`${styles.primary} ${styles.driverPrimaryAction}`} type="button" onClick={advance}>
                   {labels[booking.status] || 'Start job'}
                 </button>
               )}
+              <a className={styles.secondary} href={phoneHref}>Call passenger</a>
+              <a className={styles.secondary} href={smsHref}>Text passenger</a>
+              <a className={styles.secondary} href={mapsHref} target="_blank" rel="noreferrer">Apple Maps fallback</a>
             </div>
 
             {booking.status === 'COMPLETED' && <p className={styles.sub}><strong>Journey complete.</strong> Next step later will be payment capture, receipt and earnings.</p>}
