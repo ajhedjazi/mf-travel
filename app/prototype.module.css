@@ -105,6 +105,13 @@
   color: #123b3a;
 }
 
+.driverPrimaryAction {
+  min-height: 54px;
+  padding-left: 26px;
+  padding-right: 26px;
+  font-size: 16px;
+}
+
 .price {
   font-size: 52px;
   font-weight: 950;
@@ -193,4 +200,28 @@
   .full { grid-column: auto; }
   .card { padding: 18px; border-radius: 20px; }
   .price { font-size: 44px; }
+
+  .driverActions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .driverActions .primary,
+  .driverActions .secondary {
+    width: 100%;
+    min-height: 52px;
+    padding: 12px 14px;
+    text-align: center;
+  }
+
+  .driverPrimaryAction {
+    grid-column: 1 / -1;
+    min-height: 62px !important;
+    font-size: 18px;
+  }
+
+  .driverActions .secondary:last-child {
+    grid-column: 1 / -1;
+  }
 }
