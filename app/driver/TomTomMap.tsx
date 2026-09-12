@@ -16,6 +16,8 @@ type Props = {
   showDepartureAdvice: boolean;
 };
 
+type Coordinates = [number, number];
+
 declare global {
   interface Window {
     maplibregl?: any;
@@ -28,6 +30,7 @@ const EARLY_ARRIVAL_MINUTES = 10;
 const ROUTE_REFRESH_MS = 2 * 60 * 1000;
 const STALE_ROUTE_MS = 5 * 60 * 1000;
 const FORECAST_CUTOFF_MINUTES = 5;
+const REQUEST_TIMEOUT_MS = 10_000;
 
 function loadMapLibre(): Promise<any> {
   if (window.maplibregl) return Promise.resolve(window.maplibregl);
@@ -40,24 +43,49 @@ function loadMapLibre(): Promise<any> {
       document.head.appendChild(link);
     }
 
+    const timeout = window.setTimeout(() => reject(new Error('Map library timed out')), REQUEST_TIMEOUT_MS);
+    const finish = (value: any) => {
+      window.clearTimeout(timeout);
+      resolve(value);
+    };
+    const fail = () => {
+      window.clearTimeout(timeout);
+      reject(new Error('Map library failed to load'));
+    };
+
     const existing = document.querySelector<HTMLScriptElement>(`script[src="${MAPLIBRE_JS}"]`);
     if (existing) {
       if (window.maplibregl) {
-        resolve(window.maplibregl);
+        finish(window.maplibregl);
         return;
       }
-      existing.addEventListener('load', () => resolve(window.maplibregl), { once: true });
-      existing.addEventListener('error', reject, { once: true });
+      existing.addEventListener('load', () => finish(window.maplibregl), { once: true });
+      existing.addEventListener('error', fail, { once: true });
       return;
     }
 
     const script = document.createElement('script');
     script.src = MAPLIBRE_JS;
     script.async = true;
-    script.onload = () => resolve(window.maplibregl);
-    script.onerror = reject;
+    script.onload = () => finish(window.maplibregl);
+    script.onerror = fail;
     document.body.appendChild(script);
   });
+}
+
+async function fetchWithTimeout(url: string, timeoutMs = REQUEST_TIMEOUT_MS) {
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { signal: controller.signal });
+  } catch (error) {
+    if (error instanceof DOMException && error.name === 'AbortError') {
+      throw new Error('TomTom request timed out');
+    }
+    throw error;
+  } finally {
+    window.clearTimeout(timeout);
+  }
 }
 
 function getPosition(): Promise<GeolocationPosition> {
@@ -102,6 +130,7 @@ function toTomTomDateTime(date: Date) {
 export default function TomTomMap({ target, pickupDate, pickupTime, showDepartureAdvice }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<any>(null);
+  const geocodeCacheRef = useRef<{ target: string; destination: Coordinates } | null>(null);
   const [summary, setSummary] = useState<RouteSummary | null>(null);
   const [message, setMessage] = useState('Getting your position and calculating the route…');
   const [error, setError] = useState<string | null>(null);
@@ -110,6 +139,7 @@ export default function TomTomMap({ target, pickupDate, pickupTime, showDepartur
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [isForecast, setIsForecast] = useState(false);
   const [isOnline, setIsOnline] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
     setIsOnline(navigator.onLine);
@@ -154,17 +184,23 @@ export default function TomTomMap({ target, pickupDate, pickupTime, showDepartur
 
     async function start() {
       setError(null);
-      setSummary(null);
+      setIsRefreshing(true);
       setIsForecast(false);
       setMessage('Getting your position and calculating the route…');
 
       if (!key) {
+        setSummary(null);
         setMessage('TomTom is wired in. Add NEXT_PUBLIC_TOMTOM_API_KEY to switch the live map on.');
+        setIsRefreshing(false);
         return;
       }
-      if (!containerRef.current || !target) return;
+      if (!containerRef.current || !target) {
+        setIsRefreshing(false);
+        return;
+      }
       if (!navigator.onLine) {
         setMessage('You are offline. Reconnect for a fresh TomTom route; Apple Maps fallback remains available below.');
+        setIsRefreshing(false);
         return;
       }
 
@@ -172,15 +208,45 @@ export default function TomTomMap({ target, pickupDate, pickupTime, showDepartur
         const [maplibregl, position] = await Promise.all([loadMapLibre(), getPosition()]);
         if (cancelled) return;
 
-        const origin = [position.coords.longitude, position.coords.latitude] as [number, number];
-        const searchUrl = `https://api.tomtom.com/search/2/geocode/${encodeURIComponent(target)}.json?key=${encodeURIComponent(key)}&countrySet=GB&limit=1`;
-        const searchResponse = await fetch(searchUrl);
-        if (!searchResponse.ok) throw new Error('Target lookup failed');
-        const search = await searchResponse.json();
-        const result = search.results?.[0];
-        if (!result?.position) throw new Error(`Could not find ${target}`);
+        const origin = [position.coords.longitude, position.coords.latitude] as Coordinates;
+        let destination: Coordinates;
 
-        const destination = [result.position.lon, result.position.lat] as [number, number];
+        if (geocodeCacheRef.current?.target === target) {
+          destination = geocodeCacheRef.current.destination;
+        } else {
+          const searchUrl = `https://api.tomtom.com/search/2/geocode/${encodeURIComponent(target)}.json?key=${encodeURIComponent(key)}&countrySet=GB&limit=1`;
+          const searchResponse = await fetchWithTimeout(searchUrl);
+          if (!searchResponse.ok) throw new Error(`Target lookup failed (${searchResponse.status})`);
+          const search = await searchResponse.json();
+          const result = search.results?.[0];
+          if (!result?.position) throw new Error(`Could not find ${target}`);
+          destination = [result.position.lon, result.position.lat];
+          geocodeCacheRef.current = { target, destination };
+        }
+
+        const pickup = showDepartureAdvice ? parsePickup(pickupDate, pickupTime) : null;
+        const desiredArrival = pickup
+          ? new Date(pickup.getTime() - EARLY_ARRIVAL_MINUTES * 60_000)
+          : null;
+        const shouldForecast = Boolean(
+          desiredArrival && desiredArrival.getTime() - Date.now() > FORECAST_CUTOFF_MINUTES * 60_000,
+        );
+        const timingParam = shouldForecast && desiredArrival
+          ? `&arriveAt=${encodeURIComponent(toTomTomDateTime(desiredArrival))}`
+          : '';
+
+        const routeUrl = `https://api.tomtom.com/routing/1/calculateRoute/${origin[1]},${origin[0]}:${destination[1]},${destination[0]}/json?key=${encodeURIComponent(key)}&traffic=true&travelMode=car&routeType=fastest${timingParam}`;
+        const routeResponse = await fetchWithTimeout(routeUrl);
+        if (!routeResponse.ok) throw new Error(`Route calculation failed (${routeResponse.status})`);
+        const routeData = await routeResponse.json();
+        const route = routeData.routes?.[0];
+        if (!route) throw new Error('No TomTom route returned');
+
+        if (cancelled) return;
+        setSummary(route.summary ?? null);
+        setIsForecast(shouldForecast);
+        setMessage(shouldForecast ? 'TomTom pickup-time traffic forecast' : 'Live TomTom route');
+        setLastUpdated(new Date());
 
         mapRef.current?.remove?.();
         const map = new maplibregl.Map({
@@ -211,30 +277,6 @@ export default function TomTomMap({ target, pickupDate, pickupTime, showDepartur
 
         new maplibregl.Marker({ color: '#123b3a' }).setLngLat(origin).addTo(map);
         new maplibregl.Marker({ color: '#d89a49' }).setLngLat(destination).addTo(map);
-
-        const pickup = showDepartureAdvice ? parsePickup(pickupDate, pickupTime) : null;
-        const desiredArrival = pickup
-          ? new Date(pickup.getTime() - EARLY_ARRIVAL_MINUTES * 60_000)
-          : null;
-        const shouldForecast = Boolean(
-          desiredArrival && desiredArrival.getTime() - Date.now() > FORECAST_CUTOFF_MINUTES * 60_000,
-        );
-        const timingParam = shouldForecast && desiredArrival
-          ? `&arriveAt=${encodeURIComponent(toTomTomDateTime(desiredArrival))}`
-          : '';
-
-        const routeUrl = `https://api.tomtom.com/routing/1/calculateRoute/${origin[1]},${origin[0]}:${destination[1]},${destination[0]}/json?key=${encodeURIComponent(key)}&traffic=true&travelMode=car&routeType=fastest${timingParam}`;
-        const routeResponse = await fetch(routeUrl);
-        if (!routeResponse.ok) throw new Error('Route calculation failed');
-        const routeData = await routeResponse.json();
-        const route = routeData.routes?.[0];
-        if (!route) throw new Error('No TomTom route returned');
-
-        if (cancelled) return;
-        setSummary(route.summary ?? null);
-        setIsForecast(shouldForecast);
-        setMessage(shouldForecast ? 'TomTom pickup-time traffic forecast' : 'Live TomTom route');
-        setLastUpdated(new Date());
 
         const points = route.legs?.flatMap((leg: any) => leg.points ?? []) ?? [];
         const coordinates = points.map((point: any) => [point.longitude, point.latitude]);
@@ -275,6 +317,8 @@ export default function TomTomMap({ target, pickupDate, pickupTime, showDepartur
         const text = err instanceof Error ? err.message : 'Could not load TomTom map';
         setError(text);
         setMessage('TomTom map unavailable — Apple Maps fallback remains available below.');
+      } finally {
+        if (!cancelled) setIsRefreshing(false);
       }
     }
 
@@ -319,10 +363,10 @@ export default function TomTomMap({ target, pickupDate, pickupTime, showDepartur
         <button
           className={styles.refreshButton}
           type="button"
-          disabled={!isOnline}
+          disabled={!isOnline || isRefreshing}
           onClick={() => setRefreshTick((value) => value + 1)}
         >
-          {isOnline ? 'Refresh route' : 'Offline'}
+          {!isOnline ? 'Offline' : isRefreshing ? 'Refreshing…' : 'Refresh route'}
         </button>
       </div>
 
