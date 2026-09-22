@@ -369,8 +369,8 @@ export default function Home() {
             <p className="body-copy">Each vehicle carries up to four passengers. Tell us the number and size of your cases and cabin bags so luggage space can be confirmed before booking.</p>
           </div>
           <div className="fleet-grid">
-            <article className="fleet-card fleet-card--volvo"><div className="fleet-photo" aria-hidden="true" /><span>01</span><div><p>White</p><h3>2019 Volvo V60 R-Line</h3><small>Estate · Up to 4 passengers</small></div></article>
-            <article className="fleet-card fleet-card--insignia"><div className="fleet-photo" aria-hidden="true" /><span>02</span><div><p>Arctic Silver</p><h3>2017 Vauxhall Insignia</h3><small>500-litre boot · Up to 4 passengers</small></div></article>
+            <article className="fleet-card fleet-card--volvo"><div className="fleet-photo" aria-hidden="true" /><span>01</span><div><p>White</p><h3>Volvo V60 R-Line</h3><small>Estate · Up to 4 passengers</small></div></article>
+            <article className="fleet-card fleet-card--insignia"><div className="fleet-photo" aria-hidden="true" /><span>02</span><div><p>Arctic Silver</p><h3>Vauxhall Insignia</h3><small>500-litre boot · Up to 4 passengers</small></div></article>
           </div>
           <PanelCount current={4} />
         </section>
