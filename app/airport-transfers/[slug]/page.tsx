@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import BrandLogo from "../../brand-logo";
 import { airportRoutes, getAirportRoute } from "../route-data";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://mftravel.co.uk";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://mf-travel.onrender.com";
 
 type RoutePageProps = {
   params: Promise<{ slug: string }>;
@@ -44,7 +43,7 @@ export default async function AirportRoutePage({ params }: RoutePageProps) {
   const faqs = [
     {
       question: `How much is a transfer from Hull to ${route.airport}?`,
-      answer: `The current MF Travel guide fare is £${route.price}. It assumes one Hull pickup, one airport drop-off, normal luggage and the standard airport charge. Your exact journey is confirmed in writing before booking.`,
+      answer: `The current MF Travel guide fare is £${route.price}. It includes one direct pickup within Hull, one airport drop-off, normal luggage, the standard airport charge and airport parking, for up to four passengers subject to luggage space. We confirm a fixed quote after checking your journey details.`,
     },
     {
       question: `How long does Hull to ${route.airport} take?`,
@@ -101,7 +100,7 @@ export default async function AirportRoutePage({ params }: RoutePageProps) {
     <div className="route-site">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
       <header className="route-header">
-        <a className="route-brand" href="/" aria-label="MF Travel home"><BrandLogo tone="light" className="brand-logo--route" /></a>
+        <a className="route-brand" href="/" aria-label="MF Travel home"><strong>MF</strong><span>Travel</span></a>
         <nav aria-label="Airport route navigation">
           <a href="/">Home</a>
           <a href="/airport-transfers">Airport transfers</a>

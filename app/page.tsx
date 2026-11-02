@@ -2,7 +2,6 @@
 
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { allAirportFares } from "./airport-transfers/route-data";
-import BrandLogo from "./brand-logo";
 
 type TimeTheme = "day" | "night";
 
@@ -15,11 +14,11 @@ const faqItems = [
   },
   {
     question: "What is included in my quote?",
-    answer: "Guide fares assume one pickup, one drop-off, normal luggage and the standard airport charge. Your written quote will state exactly what is included, including any different parking, waiting or extra-stop cost.",
+    answer: "Each guide fare includes one direct pickup within Hull, one airport drop-off, normal luggage, the standard airport charge and airport parking. It covers up to four passengers, subject to luggage space. We confirm a fixed quote after checking your journey details.",
   },
   {
     question: "What happens if my flight is delayed?",
-    answer: "Share your flight number so the latest arrival information can be checked and the collection planned around it. Any included waiting time and possible additional parking or waiting cost will be made clear before you confirm.",
+    answer: "Share your flight number so the latest arrival information can be checked and the return collection planned around it. Your confirmed journey details will be set out clearly before you book.",
   },
   {
     question: "Can I travel early in the morning or late at night?",
@@ -99,6 +98,14 @@ function Icon({ name }: { name: string }) {
     <svg className="icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       {paths[name]}
     </svg>
+  );
+}
+
+function Wordmark({ compact = false }: { compact?: boolean }) {
+  return (
+    <div className={`wordmark${compact ? " wordmark--compact" : ""}`} aria-label="MF Travel">
+      <span>MF</span><small>Travel</small>
+    </div>
   );
 }
 
@@ -273,7 +280,7 @@ export default function Home() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
 
       <aside className="side-rail" aria-label="Main navigation">
-        <button className="brand-button" onClick={() => goTo("home")} aria-label="MF Travel home"><BrandLogo variant="stacked" className="brand-logo--rail" /></button>
+        <button className="brand-button" onClick={() => goTo("home")} aria-label="MF Travel home"><Wordmark /></button>
         <nav className="rail-nav">
           {navItems.map((item) => (
             <button key={item.id} className={active === item.id ? "active" : ""} onClick={() => goTo(item.id)} aria-current={active === item.id ? "page" : undefined}>
@@ -290,7 +297,7 @@ export default function Home() {
       </aside>
 
       <header className="mobile-header">
-        <button className="brand-button" onClick={() => goTo("home")} aria-label="MF Travel home"><BrandLogo className="brand-logo--mobile" /></button>
+        <button className="brand-button" onClick={() => goTo("home")} aria-label="MF Travel home"><Wordmark compact /></button>
         <div className="mobile-actions">
           <button className="theme-toggle theme-toggle--mobile" onClick={toggleTheme} aria-label={themeOverride === null ? `Switch to ${theme === "day" ? "night" : "day"} theme` : "Use automatic UK-time theme"}><Icon name={theme === "day" ? "sun" : "moon"} /></button>
           <button className={`menu-button${menuOpen ? " open" : ""}`} onClick={() => setMenuOpen((value) => !value)} aria-label="Toggle navigation" aria-expanded={menuOpen}><span /><span /><span /></button>
@@ -314,7 +321,7 @@ export default function Home() {
             <div><Icon name="clock" /><p><strong>Day or night</strong><span>Pre-booked around your flight</span></p></div>
             <div><Icon name="price" /><p><strong>Clear quote</strong><span>Know the agreed fare</span></p></div>
             <div><Icon name="person" /><p><strong>Personal</strong><span>A local two-person team</span></p></div>
-            <div><Icon name="car" /><p><strong>Comfortable</strong><span>Two spacious cars</span></p></div>
+            <div><Icon name="car" /><p><strong>Comfortable</strong><span>Two estate-class cars</span></p></div>
           </div>
           <PanelCount current={1} />
         </section>
@@ -340,7 +347,7 @@ export default function Home() {
             <Eyebrow>Guide fares from Hull</Eyebrow>
             <h2>Clear from<br /><em>the outset.</em></h2>
             <p className="lead">A useful starting point for the airports Hull travellers use most. Choose a route to begin your request.</p>
-            <p className="fare-smallprint">Guide fares are for a direct journey from Hull with one pickup, one drop-off, normal luggage and the standard airport charge included. Your exact address, date, stops, passengers and luggage are confirmed in the final quote.</p>
+            <p className="fare-smallprint">Each guide fare includes one direct pickup within Hull, one airport drop-off, normal luggage, the standard airport charge and airport parking. It covers up to four passengers, subject to luggage space. We confirm a fixed quote after checking your journey details.</p>
           </div>
           <div className="fare-board" aria-label="Airport guide fares">
             {fares.map((fare) => fare.slug ? (
@@ -369,8 +376,8 @@ export default function Home() {
             <p className="body-copy">Each vehicle carries up to four passengers. Tell us the number and size of your cases and cabin bags so luggage space can be confirmed before booking.</p>
           </div>
           <div className="fleet-grid">
-            <article className="fleet-card fleet-card--volvo"><div className="fleet-photo" aria-hidden="true" /><span>01</span><div><p>White</p><h3>Volvo V60 R-Line</h3><small>Estate · Up to 4 passengers</small></div></article>
-            <article className="fleet-card fleet-card--insignia"><div className="fleet-photo" aria-hidden="true" /><span>02</span><div><p>Arctic Silver</p><h3>Vauxhall Insignia</h3><small>500-litre boot · Up to 4 passengers</small></div></article>
+            <article className="fleet-card fleet-card--volvo"><div className="fleet-photo" aria-hidden="true" /><span>01</span><div><p>White</p><h3>2019 Volvo V60 R-Line</h3><small>Estate · Up to 4 passengers</small></div></article>
+            <article className="fleet-card fleet-card--insignia"><div className="fleet-photo" aria-hidden="true" /><span>02</span><div><p>Arctic Silver</p><h3>2017 Vauxhall Insignia</h3><small>Hatchback · Up to 4 passengers</small></div></article>
           </div>
           <PanelCount current={4} />
         </section>
