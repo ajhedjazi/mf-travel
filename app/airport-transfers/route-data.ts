@@ -30,7 +30,7 @@ export const airportRoutes: AirportRoute[] = [
     routeHeading: "A cross-Pennine journey planned properly",
     routeCopy: "The usual journey runs west from Hull towards Manchester and is planned with extra time for the M62 and the airport approach. Your collection time is agreed from your flight departure, check-in guidance and pickup address—not from a generic timetable.",
     airportHeading: "Terminal details agreed before travel",
-    airportCopy: "Manchester has three passenger terminals. Tell us the airline and flight number when requesting a quote so the correct terminal, outward drop-off and return collection plan can be confirmed in writing.",
+    airportCopy: "Manchester's terminal arrangements depend on your airline. Tell us the airline and flight number when requesting a quote so the correct terminal, outward drop-off and return collection plan can be confirmed in writing.",
     usefulFor: ["Long-haul and European departures", "Families travelling with several cases", "Early flights before practical rail connections"],
     planningPoints: [
       { title: "Guide fare from Hull", copy: "£150 for one direct Hull pickup and one airport drop-off, including normal luggage, the standard airport charge and airport parking. Up to four passengers, subject to luggage space." },

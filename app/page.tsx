@@ -1,7 +1,10 @@
 "use client";
 
-import { FormEvent, useEffect, useRef, useState } from "react";
+import { FormEvent, MouseEvent, useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import BrandLogo from "./brand-logo";
 import { allAirportFares } from "./airport-transfers/route-data";
+import { businessId, businessSchema, fareInclusions, serializeSchema, serviceAreas, siteUrl, websiteId } from "./site-config";
 
 type TimeTheme = "day" | "night";
 
@@ -14,7 +17,7 @@ const faqItems = [
   },
   {
     question: "What is included in my quote?",
-    answer: "Each guide fare includes one direct pickup within Hull, one airport drop-off, normal luggage, the standard airport charge and airport parking. It covers up to four passengers, subject to luggage space. We confirm a fixed quote after checking your journey details.",
+    answer: fareInclusions,
   },
   {
     question: "What happens if my flight is delayed?",
@@ -101,14 +104,6 @@ function Icon({ name }: { name: string }) {
   );
 }
 
-function Wordmark({ compact = false }: { compact?: boolean }) {
-  return (
-    <div className={`wordmark${compact ? " wordmark--compact" : ""}`} aria-label="MF Travel">
-      <span>MF</span><small>Travel</small>
-    </div>
-  );
-}
-
 function Eyebrow({ children }: { children: React.ReactNode }) {
   return <p className="eyebrow"><span />{children}</p>;
 }
@@ -137,13 +132,20 @@ export default function Home() {
     if (!target) return;
 
     if (window.innerWidth <= 820) {
-      target.scrollIntoView({ behavior: "smooth", block: "start" });
+      target.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth", block: "start" });
     } else {
       const root = scroller.current ?? target.closest<HTMLElement>(".panel-scroller");
       if (root) root.scrollLeft = target.offsetLeft;
     }
     setActive(id);
     setMenuOpen(false);
+  };
+
+  const navigateTo = (event: MouseEvent<HTMLAnchorElement>, id: string) => {
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    event.preventDefault();
+    window.history.replaceState(null, "", `#${id}`);
+    goTo(id);
   };
 
   const chooseFare = (airport: string) => {
@@ -162,7 +164,8 @@ export default function Home() {
     const destination = new URLSearchParams(window.location.search).get("destination");
     const timer = window.setTimeout(() => {
       if (destination) setJourneyDestination(destination);
-      if (window.location.hash === "#quote") goTo("quote");
+      const section = window.location.hash.slice(1);
+      if (navItems.some((item) => item.id === section)) goTo(section);
     }, 0);
     return () => window.clearTimeout(timer);
   }, []);
@@ -236,23 +239,20 @@ export default function Home() {
   const structuredData = {
     "@context": "https://schema.org",
     "@graph": [
+      businessSchema(),
       {
-        "@type": "TransportationService",
-        name: "MF Travel",
+        "@type": "WebSite", "@id": websiteId, url: siteUrl,
+        name: "MF Travel", inLanguage: "en-GB", publisher: { "@id": businessId },
+      },
+      {
+        "@type": "Service",
+        "@id": `${siteUrl}/#airport-transfer-service`,
+        name: "Airport transfers from Hull and East Riding",
+        url: `${siteUrl}/airport-transfers`,
+        provider: { "@id": businessId },
         description: "Pre-booked airport transfers and long-distance private-hire travel from Hull.",
-        areaServed: ["Hull", "East Riding of Yorkshire", "Beverley", "Cottingham", "Hessle", "Anlaby", "Willerby", "Brough"],
+        areaServed: serviceAreas,
         serviceType: ["Airport transfer", "Long-distance private hire", "24-hour pre-booked airport travel"],
-        ...(rawBookingNumber ? { telephone: rawBookingNumber } : {}),
-        ...(bookingEmail ? { email: bookingEmail } : {}),
-        ...(operatorLicence && licensingAuthority
-          ? {
-              identifier: {
-                "@type": "PropertyValue",
-                name: `${licensingAuthority} private-hire operator licence`,
-                value: operatorLicence,
-              },
-            }
-          : {}),
         hasOfferCatalog: {
           "@type": "OfferCatalog",
           name: "Guide airport fares from Hull",
@@ -260,6 +260,8 @@ export default function Home() {
             "@type": "Offer",
             priceCurrency: "GBP",
             price: fare.price,
+            url: fare.slug ? `${siteUrl}/airport-transfers/${fare.slug}` : `${siteUrl}/#fares`,
+            itemOffered: { "@type": "Service", name: `Hull to ${fare.airport} transfer` },
             description: `Guide fare from Hull to ${fare.airport}; final quote depends on journey details.`,
           })),
         },
@@ -277,15 +279,16 @@ export default function Home() {
 
   return (
     <div className="site-shell" data-theme={theme}>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeSchema(structuredData) }} />
+      <a className="skip-link" href="#main-content">Skip to main content</a>
 
       <aside className="side-rail" aria-label="Main navigation">
-        <button className="brand-button" onClick={() => goTo("home")} aria-label="MF Travel home"><Wordmark /></button>
+        <Link prefetch={false} className="brand-button" href="/" onClick={(event) => navigateTo(event, "home")} aria-label="MF Travel home"><BrandLogo className="brand-logo--rail" /></Link>
         <nav className="rail-nav">
           {navItems.map((item) => (
-            <button key={item.id} className={active === item.id ? "active" : ""} onClick={() => goTo(item.id)} aria-current={active === item.id ? "page" : undefined}>
+            <a href={`#${item.id}`} key={item.id} className={active === item.id ? "active" : ""} onClick={(event) => navigateTo(event, item.id)} aria-current={active === item.id ? "location" : undefined}>
               <Icon name={item.icon} /><span>{item.label}</span>
-            </button>
+            </a>
           ))}
         </nav>
         <button className="theme-toggle theme-toggle--rail" onClick={toggleTheme} aria-label={themeOverride === null ? `Switch to ${theme === "day" ? "night" : "day"} theme` : "Use automatic UK-time theme"}>
@@ -297,24 +300,24 @@ export default function Home() {
       </aside>
 
       <header className="mobile-header">
-        <button className="brand-button" onClick={() => goTo("home")} aria-label="MF Travel home"><Wordmark compact /></button>
+        <Link prefetch={false} className="brand-button" href="/" onClick={(event) => navigateTo(event, "home")} aria-label="MF Travel home"><BrandLogo className="brand-logo--mobile" /></Link>
         <div className="mobile-actions">
           <button className="theme-toggle theme-toggle--mobile" onClick={toggleTheme} aria-label={themeOverride === null ? `Switch to ${theme === "day" ? "night" : "day"} theme` : "Use automatic UK-time theme"}><Icon name={theme === "day" ? "sun" : "moon"} /></button>
           <button className={`menu-button${menuOpen ? " open" : ""}`} onClick={() => setMenuOpen((value) => !value)} aria-label="Toggle navigation" aria-expanded={menuOpen}><span /><span /><span /></button>
         </div>
-        {menuOpen && <div className="mobile-menu">{navItems.map((item) => <button key={item.id} onClick={() => goTo(item.id)}>{item.label}</button>)}</div>}
+        <nav className="mobile-menu" aria-label="More navigation" hidden={!menuOpen}>{navItems.map((item) => <a href={`#${item.id}`} key={item.id} onClick={(event) => navigateTo(event, item.id)}>{item.label}</a>)}</nav>
       </header>
 
-      <main className="panel-scroller" ref={scroller}>
+      <main id="main-content" tabIndex={-1} className="panel-scroller" ref={scroller}>
         <section id="home" className="panel hero-panel">
           <div className="hero-image" aria-hidden="true" /><div className="hero-shade" aria-hidden="true" />
           <div className="hero-content">
-            <Eyebrow>MF Travel · Hull</Eyebrow>
-            <h1>Journeys<br />that <em>matter.</em></h1>
+            <Eyebrow>MF Travel · Journeys that matter</Eyebrow>
+            <h1>Airport transfers<br /><em>from Hull.</em></h1>
             <p className="hero-intro">Pre-booked airport transfers from Hull and East Riding, plus long-distance travel planned around you.</p>
             <div className="hero-actions">
-              <button className="button button--gold" onClick={() => goTo("quote")}>Get a quote <Icon name="arrow" /></button>
-              <button className="text-button" onClick={() => goTo("fares")}>See guide fares <span>→</span></button>
+              <a href="#quote" className="button button--gold" onClick={(event) => navigateTo(event, "quote")}>Get a quote <Icon name="arrow" /></a>
+              <a href="#fares" className="text-button" onClick={(event) => navigateTo(event, "fares")}>See guide fares <span>→</span></a>
             </div>
           </div>
           <div className="trust-strip" aria-label="Service priorities">
@@ -336,7 +339,7 @@ export default function Home() {
               <article><span>02</span><div><h3>One clear quote</h3><p>Your confirmation states the agreed journey and which airport or parking charges are included.</p></div></article>
               <article><span>03</span><div><h3>Outward and return</h3><p>Arrange Manchester, Leeds Bradford, Humberside and other airport journeys in one request.</p></div></article>
             </div>
-            <a className="button button--line" href="/airport-transfers">View airport routes <Icon name="arrow" /></a>
+            <Link prefetch={false} className="button button--line" href="/airport-transfers">View airport routes <Icon name="arrow" /></Link>
           </div>
           <div className="editorial-card editorial-card--airport"><span className="card-number">A</span><div><Icon name="plane" /><p>Hull to the terminal</p><small>Pre-booked. Planned. Personal.</small></div></div>
           <PanelCount current={2} />
@@ -347,21 +350,21 @@ export default function Home() {
             <Eyebrow>Guide fares from Hull</Eyebrow>
             <h2>Clear from<br /><em>the outset.</em></h2>
             <p className="lead">A useful starting point for the airports Hull travellers use most. Choose a route to begin your request.</p>
-            <p className="fare-smallprint">Each guide fare includes one direct pickup within Hull, one airport drop-off, normal luggage, the standard airport charge and airport parking. It covers up to four passengers, subject to luggage space. We confirm a fixed quote after checking your journey details.</p>
+            <p className="fare-smallprint">{fareInclusions}</p>
           </div>
           <div className="fare-board" aria-label="Airport guide fares">
             {fares.map((fare) => fare.slug ? (
-              <a className="fare-row" href={`/airport-transfers/${fare.slug}`} key={fare.airport}>
+              <Link prefetch={false} className="fare-row" href={`/airport-transfers/${fare.slug}`} key={fare.airport}>
                 <span><strong>{fare.airport}</strong><small>{fare.note} · View route</small></span>
                 <span className="fare-price"><small>guide</small>£{fare.price}</span>
                 <Icon name="arrow" />
-              </a>
+              </Link>
             ) : (
-              <button className="fare-row" key={fare.airport} onClick={() => chooseFare(fare.airport)}>
+              <a className="fare-row" href={`/?destination=${encodeURIComponent(fare.airport)}#quote`} key={fare.airport} onClick={(event) => { if (event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey) { event.preventDefault(); chooseFare(fare.airport); } }}>
                 <span><strong>{fare.airport}</strong><small>{fare.note} · Request quote</small></span>
                 <span className="fare-price"><small>guide</small>£{fare.price}</span>
                 <Icon name="arrow" />
-              </button>
+              </a>
             ))}
             <p>Teesside, Heathrow, Gatwick, Stansted and other UK airports or long-distance destinations are quoted individually.</p>
           </div>
@@ -393,7 +396,7 @@ export default function Home() {
               <p><Icon name="route" /><span><strong>Route agreed</strong>Pickup, stops and destination stated in your quote.</span></p>
               <p><Icon name="person" /><span><strong>Direct service</strong>Designed for customers who prefer a familiar local team.</span></p>
             </div>
-            <button className="button button--line" onClick={() => goTo("quote")}>Request a journey <Icon name="arrow" /></button>
+            <a href="#quote" className="button button--line" onClick={(event) => navigateTo(event, "quote")}>Request a journey <Icon name="arrow" /></a>
           </div>
           <PanelCount current={5} />
         </section>
@@ -474,7 +477,7 @@ export default function Home() {
 
       <nav className="bottom-nav" aria-label="Mobile navigation">
         {[navItems[0], navItems[2], navItems[3], navItems[7]].map((item) => (
-          <button key={item.id} className={active === item.id ? "active" : ""} onClick={() => goTo(item.id)} aria-current={active === item.id ? "page" : undefined}><Icon name={item.icon} /><span>{item.short}</span></button>
+          <a href={`#${item.id}`} key={item.id} className={active === item.id ? "active" : ""} onClick={(event) => navigateTo(event, item.id)} aria-current={active === item.id ? "location" : undefined}><Icon name={item.icon} /><span>{item.short}</span></a>
         ))}
       </nav>
 

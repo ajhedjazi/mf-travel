@@ -1,18 +1,25 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import BrandLogo from "../brand-logo";
+import BookingContact from "../booking-contact";
+import { businessSchema, fareInclusions, serializeSchema, siteUrl } from "../site-config";
 import { airportRoutes } from "./route-data";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://mftravel.co.uk";
-
 export const metadata: Metadata = {
-  title: "Airport Transfers from Hull",
+  title: "Hull Airport Transfer Prices & Routes",
   description: "Compare MF Travel guide fares and plan pre-booked airport transfers from Hull and East Riding to Manchester, Leeds Bradford, Humberside, East Midlands and Liverpool.",
   alternates: { canonical: "/airport-transfers" },
   openGraph: {
-    title: "Airport Transfers from Hull | MF Travel",
+    title: "Hull Airport Transfer Prices & Routes | MF Travel",
     description: "Pre-booked, door-to-terminal airport travel from Hull and East Riding with clear guide fares.",
     url: "/airport-transfers",
     images: [{ url: "/mf-travel-airport-hero.webp", width: 1536, height: 1024, alt: "MF Travel airport transfer vehicles" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Hull Airport Transfer Prices & Routes | MF Travel",
+    description: "Compare airport transfer guide fares from Hull, including airport parking, and request a fixed quote for your journey.",
+    images: ["/mf-travel-airport-hero.webp"],
   },
 };
 
@@ -20,6 +27,7 @@ export default function AirportTransfersPage() {
   const structuredData = {
     "@context": "https://schema.org",
     "@graph": [
+      businessSchema(),
       {
         "@type": "BreadcrumbList",
         itemListElement: [
@@ -42,26 +50,27 @@ export default function AirportTransfersPage() {
 
   return (
     <div className="route-site">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeSchema(structuredData) }} />
+      <a className="skip-link" href="#main-content">Skip to main content</a>
       <header className="route-header">
-        <a className="route-brand" href="/" aria-label="MF Travel home"><BrandLogo tone="light" className="brand-logo--route" /></a>
+        <Link prefetch={false} className="route-brand" href="/" aria-label="MF Travel home"><BrandLogo className="brand-logo--route" /></Link>
         <nav aria-label="Airport page navigation">
-          <a href="/">Home</a>
-          <a aria-current="page" href="/airport-transfers">Airport transfers</a>
-          <a className="route-header-cta" href="/#quote">Get a quote</a>
+          <Link prefetch={false} href="/">Home</Link>
+          <Link prefetch={false} aria-current="page" href="/airport-transfers">Airport transfers</Link>
+          <Link prefetch={false} className="route-header-cta" href="/#quote">Get a quote</Link>
         </nav>
       </header>
 
-      <main>
+      <main id="main-content" tabIndex={-1}>
         <section className="route-hub-hero">
           <div className="route-hub-hero__image" aria-hidden="true" />
           <div className="route-hub-hero__shade" aria-hidden="true" />
           <div className="route-wrap route-hub-hero__content">
             <p className="route-kicker">MF Travel · Hull &amp; East Riding</p>
-            <h1>Airport transfers<br />planned <em>door to terminal.</em></h1>
+            <h1>Hull airport transfers<br /><em>prices &amp; routes.</em></h1>
             <p>Compare guide fares for the airports Hull travellers use most, then request one clear quote for the outward journey, return collection or both.</p>
             <div className="route-hero-actions">
-              <a className="route-button route-button--gold" href="/#quote">Request a quote</a>
+              <Link prefetch={false} className="route-button route-button--gold" href="/#quote">Request a quote</Link>
               <a className="route-text-link" href="#routes">Explore routes <span>↓</span></a>
             </div>
           </div>
@@ -73,12 +82,13 @@ export default function AirportTransfersPage() {
             <h2 id="airport-service-heading">The holiday starts<br /><em>at your door.</em></h2>
           </div>
           <div className="route-intro-copy">
-            <p>MF Travel focuses on journeys that benefit from proper planning: airport transfers, longer-distance travel and repeat bookings. It is not a reactive city-centre taxi service.</p>
+            <p>MF Travel provides pre-booked airport transfers from Hull, Beverley, Cottingham, Hessle, Anlaby, Willerby, Brough and the wider East Riding. Compare routes below and share your pickup address, flight details, passengers and luggage for a confirmed quote.</p>
             <ul className="route-tick-list">
               <li>One pickup and one drop-off included in the guide fare</li>
               <li>Flight and luggage details checked before travel</li>
               <li>Pre-booked journeys available day or night, subject to availability</li>
             </ul>
+            <p className="route-inclusions">{fareInclusions}</p>
           </div>
         </section>
 
@@ -91,7 +101,7 @@ export default function AirportTransfersPage() {
             </div>
             <div className="route-card-grid">
               {airportRoutes.map((route, index) => (
-                <a className="route-card" href={`/airport-transfers/${route.slug}`} key={route.slug}>
+                <Link prefetch={false} className="route-card" href={`/airport-transfers/${route.slug}`} key={route.slug}>
                   <span className="route-card__number">{String(index + 1).padStart(2, "0")}</span>
                   <div>
                     <p>Hull to</p>
@@ -100,10 +110,10 @@ export default function AirportTransfersPage() {
                   </div>
                   <strong><small>guide fare</small>£{route.price}</strong>
                   <span className="route-card__arrow" aria-hidden="true">→</span>
-                </a>
+                </Link>
               ))}
             </div>
-            <p className="route-list-note">Newcastle, Birmingham, Teesside, Heathrow, Gatwick, Stansted and other UK airports are also available by individual quote.</p>
+            <p className="route-list-note">Guide fares from Hull are also available for Newcastle International Airport (£185) and Birmingham Airport (£190). <Link prefetch={false} href="/#fares">View all seven airport guide fares</Link>. Teesside, Heathrow, Gatwick, Stansted and other UK airports are quoted individually.</p>
           </div>
         </section>
 
@@ -124,13 +134,14 @@ export default function AirportTransfersPage() {
             <p className="route-kicker">Ready when you are</p>
             <h2>Tell us where<br /><em>you are flying from.</em></h2>
             <p>Request an outward journey, return collection or both in one straightforward message.</p>
-            <a className="route-button route-button--gold" href="/#quote">Plan my airport journey</a>
+            <Link prefetch={false} className="route-button route-button--gold" href="/#quote">Plan my airport journey</Link>
+            <BookingContact />
           </div>
         </section>
       </main>
 
       <footer className="route-footer">
-        <div className="route-wrap"><span>MF Travel · Hull</span><a href="/">Journeys that matter.</a></div>
+        <div className="route-wrap"><span>MF Travel · Hull</span><Link prefetch={false} href="/">Journeys that matter.</Link></div>
       </footer>
     </div>
   );

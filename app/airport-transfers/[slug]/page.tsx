@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
+import BrandLogo from "../../brand-logo";
+import BookingContact from "../../booking-contact";
+import { businessId, businessSchema, fareInclusions, serializeSchema, serviceAreas, siteUrl } from "../../site-config";
 import { airportRoutes, getAirportRoute } from "../route-data";
-
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://mf-travel.onrender.com";
 
 type RoutePageProps = {
   params: Promise<{ slug: string }>;
@@ -43,7 +45,7 @@ export default async function AirportRoutePage({ params }: RoutePageProps) {
   const faqs = [
     {
       question: `How much is a transfer from Hull to ${route.airport}?`,
-      answer: `The current MF Travel guide fare is £${route.price}. It includes one direct pickup within Hull, one airport drop-off, normal luggage, the standard airport charge and airport parking, for up to four passengers subject to luggage space. We confirm a fixed quote after checking your journey details.`,
+      answer: `The current MF Travel guide fare is £${route.price}. ${fareInclusions}`,
     },
     {
       question: `How long does Hull to ${route.airport} take?`,
@@ -62,6 +64,7 @@ export default async function AirportRoutePage({ params }: RoutePageProps) {
   const structuredData = {
     "@context": "https://schema.org",
     "@graph": [
+      businessSchema(),
       {
         "@type": "BreadcrumbList",
         itemListElement: [
@@ -72,10 +75,12 @@ export default async function AirportRoutePage({ params }: RoutePageProps) {
       },
       {
         "@type": "Service",
+        "@id": `${routeUrl}#service`,
+        url: routeUrl,
         name: route.title,
         description: route.description,
-        provider: { "@type": "TransportationService", name: "MF Travel", url: siteUrl },
-        areaServed: ["Hull", "East Riding of Yorkshire", "Beverley", "Cottingham", "Hessle", "Anlaby", "Willerby", "Brough"],
+        provider: { "@id": businessId },
+        areaServed: serviceAreas,
         serviceType: "Pre-booked airport transfer",
         offers: {
           "@type": "Offer",
@@ -98,26 +103,27 @@ export default async function AirportRoutePage({ params }: RoutePageProps) {
 
   return (
     <div className="route-site">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeSchema(structuredData) }} />
+      <a className="skip-link" href="#main-content">Skip to main content</a>
       <header className="route-header">
-        <a className="route-brand" href="/" aria-label="MF Travel home"><strong>MF</strong><span>Travel</span></a>
+        <Link prefetch={false} className="route-brand" href="/" aria-label="MF Travel home"><BrandLogo className="brand-logo--route" /></Link>
         <nav aria-label="Airport route navigation">
-          <a href="/">Home</a>
-          <a href="/airport-transfers">Airport transfers</a>
-          <a className="route-header-cta" href={quoteHref}>Get a quote</a>
+          <Link prefetch={false} href="/">Home</Link>
+          <Link prefetch={false} href="/airport-transfers">Airport transfers</Link>
+          <Link prefetch={false} className="route-header-cta" href={quoteHref}>Get a quote</Link>
         </nav>
       </header>
 
-      <main>
+      <main id="main-content" tabIndex={-1}>
         <section className="route-detail-hero">
           <div className="route-detail-hero__image" aria-hidden="true" />
           <div className="route-detail-hero__shade" aria-hidden="true" />
           <div className="route-wrap route-detail-hero__content">
             <nav className="route-breadcrumbs" aria-label="Breadcrumb">
-              <a href="/">Home</a><span>/</span><a href="/airport-transfers">Airport transfers</a><span>/</span><span>{route.shortName}</span>
+              <Link prefetch={false} href="/">Home</Link><span>/</span><Link prefetch={false} href="/airport-transfers">Airport transfers</Link><span>/</span><span aria-current="page">{route.shortName}</span>
             </nav>
             <p className="route-kicker">Pre-booked from Hull</p>
-            <h1>Hull to<br /><em>{route.airport}</em></h1>
+            <h1>Hull to<br /><em>{route.airport}</em><span className="route-service-label">Airport transfers</span></h1>
             <p>{route.intro}</p>
             <div className="route-fare-summary">
               <div><small>Guide fare</small><strong>£{route.price}</strong></div>
@@ -125,7 +131,7 @@ export default async function AirportRoutePage({ params }: RoutePageProps) {
               <div><small>Typical journey</small><strong>{route.journeyTime}</strong></div>
             </div>
             <div className="route-hero-actions">
-              <a className="route-button route-button--gold" href={quoteHref}>Request this journey</a>
+              <Link prefetch={false} className="route-button route-button--gold" href={quoteHref}>Request this journey</Link>
               <a className="route-text-link" href="#journey-details">See journey details <span>↓</span></a>
             </div>
           </div>
@@ -141,8 +147,8 @@ export default async function AirportRoutePage({ params }: RoutePageProps) {
             <span>MF / {route.shortName}</span>
             <small>Guide fare from Hull</small>
             <strong>£{route.price}</strong>
-            <p>One pickup · One drop-off · Normal luggage · Standard airport charge</p>
-            <a href={quoteHref}>Get an exact quote <span>→</span></a>
+            <p>{fareInclusions}</p>
+            <Link prefetch={false} href={quoteHref}>Get an exact quote <span>→</span></Link>
           </aside>
         </section>
 
@@ -196,9 +202,9 @@ export default async function AirportRoutePage({ params }: RoutePageProps) {
           </div>
           <div className="route-mini-grid">
             {airportRoutes.filter((item) => item.slug !== route.slug).map((item) => (
-              <a href={`/airport-transfers/${item.slug}`} key={item.slug}>
-                <span>{item.shortName}</span><strong>from £{item.price}</strong><small>→</small>
-              </a>
+              <Link prefetch={false} href={`/airport-transfers/${item.slug}`} key={item.slug}>
+                <span>Hull to {item.shortName}</span><strong>from £{item.price}</strong><small>→</small>
+              </Link>
             ))}
           </div>
         </section>
@@ -208,13 +214,14 @@ export default async function AirportRoutePage({ params }: RoutePageProps) {
             <p className="route-kicker">Request a fixed quote</p>
             <h2>Your journey to<br /><em>{route.shortName}.</em></h2>
             <p>Share the address, date, flight, passengers and luggage. MF Travel will confirm the exact journey and fare before accepting the booking.</p>
-            <a className="route-button route-button--gold" href={quoteHref}>Request this transfer</a>
+            <Link prefetch={false} className="route-button route-button--gold" href={quoteHref}>Request this transfer</Link>
+            <BookingContact />
           </div>
         </section>
       </main>
 
       <footer className="route-footer">
-        <div className="route-wrap"><span>MF Travel · Hull</span><a href="/airport-transfers">All airport transfers</a></div>
+        <div className="route-wrap"><span>MF Travel · Hull</span><Link prefetch={false} href="/airport-transfers">All airport transfers</Link></div>
       </footer>
     </div>
   );

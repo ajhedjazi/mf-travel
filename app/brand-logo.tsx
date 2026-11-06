@@ -1,33 +1,12 @@
-type BrandLogoProps = {
-  variant?: "icon" | "horizontal" | "stacked";
-  tone?: "adaptive" | "light" | "dark";
-  className?: string;
-};
+import Image from "next/image";
+import { logoPath } from "./site-config";
 
 export default function BrandLogo({
-  variant = "horizontal",
-  tone = "adaptive",
   className = "",
-}: BrandLogoProps) {
-  const classes = [
-    "brand-logo",
-    `brand-logo--${variant}`,
-    tone === "adaptive" ? "brand-logo--adaptive" : "",
-    className,
-  ].filter(Boolean).join(" ");
-
-  if (tone === "adaptive") {
-    return (
-      <span className={classes} aria-hidden="true">
-        <img className="brand-logo__night" src={`/brand/mf-travel-${variant}-light.svg`} alt="" />
-        <img className="brand-logo__day" src={`/brand/mf-travel-${variant}-dark.svg`} alt="" />
-      </span>
-    );
-  }
-
+}: { className?: string }) {
   return (
-    <span className={classes} aria-hidden="true">
-      <img src={`/brand/mf-travel-${variant}-${tone}.svg`} alt="" />
+    <span className={`brand-logo brand-logo--card ${className}`}>
+      <Image src={logoPath} alt="MF Travel" width={572} height={174} loading="eager" unoptimized />
     </span>
   );
 }
