@@ -283,7 +283,7 @@ export default function Home() {
       <a className="skip-link" href="#main-content">Skip to main content</a>
 
       <aside className="side-rail" aria-label="Main navigation">
-        <Link prefetch={false} className="brand-button" href="/" onClick={(event) => navigateTo(event, "home")} aria-label="MF Travel home"><BrandLogo className="brand-logo--rail" /></Link>
+        <Link prefetch={false} className="brand-button" href="/" onClick={(event) => navigateTo(event, "home")} aria-label="MF Travel home"><BrandLogo adaptive className="brand-logo--rail" /></Link>
         <nav className="rail-nav">
           {navItems.map((item) => (
             <a href={`#${item.id}`} key={item.id} className={active === item.id ? "active" : ""} onClick={(event) => navigateTo(event, item.id)} aria-current={active === item.id ? "location" : undefined}>
@@ -300,7 +300,7 @@ export default function Home() {
       </aside>
 
       <header className="mobile-header">
-        <Link prefetch={false} className="brand-button" href="/" onClick={(event) => navigateTo(event, "home")} aria-label="MF Travel home"><BrandLogo className="brand-logo--mobile" /></Link>
+        <Link prefetch={false} className="brand-button" href="/" onClick={(event) => navigateTo(event, "home")} aria-label="MF Travel home"><BrandLogo adaptive className="brand-logo--mobile" /></Link>
         <div className="mobile-actions">
           <button className="theme-toggle theme-toggle--mobile" onClick={toggleTheme} aria-label={themeOverride === null ? `Switch to ${theme === "day" ? "night" : "day"} theme` : "Use automatic UK-time theme"}><Icon name={theme === "day" ? "sun" : "moon"} /></button>
           <button className={`menu-button${menuOpen ? " open" : ""}`} onClick={() => setMenuOpen((value) => !value)} aria-label="Toggle navigation" aria-expanded={menuOpen}><span /><span /><span /></button>

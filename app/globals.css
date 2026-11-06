@@ -32,6 +32,7 @@ button:focus-visible, a:focus-visible, summary:focus-visible, input:focus-visibl
 .brand-logo__day { display: none !important; }
 .site-shell[data-theme="day"] .brand-logo--adaptive .brand-logo__night { display: none; }
 .site-shell[data-theme="day"] .brand-logo--adaptive .brand-logo__day { display: block !important; }
+.site-shell[data-theme="day"] .brand-logo--adaptive { background: transparent; }
 .brand-logo--rail { width: 138px; max-width: 100%; }
 .brand-logo--mobile { width: 184px; max-width: 48vw; }
 .brand-logo--route { width: 210px; }

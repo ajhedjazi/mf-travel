@@ -110,6 +110,19 @@ test("home service heading, route links and section anchors are server-rendered"
   assert.match(home, /Skip to main content/);
 });
 
+test("the homepage has a separate day-theme logo and dark route pages retain the original", async () => {
+  assert.match(html.get("/"), /brand-logo--adaptive/);
+  assert.match(html.get("/"), /class="brand-logo__day"/);
+  assert.match(html.get("/"), /src="\/brand\/mf-travel-business-card-logo-day\.webp"/);
+  for (const [path, markup] of html) {
+    if (path !== "/") assert.doesNotMatch(markup, /brand-logo__day/);
+  }
+  const response = await fetch(`${base}/brand/mf-travel-business-card-logo-day.webp`);
+  assert.equal(response.status, 200);
+  assert.match(response.headers.get("content-type") ?? "", /image\/webp/);
+  assert.ok((await response.arrayBuffer()).byteLength > 0);
+});
+
 test("approved fares and inclusions match visible content and structured data", () => {
   const home = html.get("/");
   const offers = schema(home).find((item) => item["@type"] === "Service").hasOfferCatalog.itemListElement;
