@@ -32,7 +32,11 @@ before(async () => {
     const deadline = Date.now() + 30_000;
     while (true) {
       if (server.exitCode !== null) throw new Error(`Next server exited: ${log}`);
-      try { if ((await fetch(base)).ok) break; } catch { /* waiting for readiness */ }
+      try {
+        const ready = await fetch(base);
+        await ready.arrayBuffer();
+        if (ready.ok) break;
+      } catch { /* waiting for readiness */ }
       if (Date.now() > deadline) throw new Error(`Next server did not start: ${log}`);
       await new Promise((resolve) => setTimeout(resolve, 150));
     }
@@ -92,6 +96,7 @@ test("the exact business-card logo has dimensions and a home link on every page"
   const response = await fetch(`${base}/brand/mf-travel-business-card-logo.webp`);
   assert.equal(response.status, 200);
   assert.match(response.headers.get("content-type") ?? "", /image\/webp/);
+  assert.ok((await response.arrayBuffer()).byteLength > 0);
 });
 
 test("home service heading, route links and section anchors are server-rendered", () => {
@@ -169,4 +174,5 @@ test("sitemap and robots point only to the business domain; missing routes retur
   assert.match(await robots.text(), /Allow: \/\s+Sitemap: https:\/\/mftravel\.co\.uk\/sitemap\.xml/);
   const missing = await fetch(`${base}/airport-transfers/not-a-real-airport`);
   assert.equal(missing.status, 404);
+  assert.match(await missing.text(), /noindex/);
 });
