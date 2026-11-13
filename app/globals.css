@@ -200,7 +200,7 @@ h1 em, h2 em { color: var(--gold-light); font-style: normal; }
 .quote-card label { display: grid; gap: 8px; color: #b9c3c7; font-size: 9px; font-weight: 700; letter-spacing: .13em; text-transform: uppercase; }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 18px; }
 .form-row--three { grid-template-columns: 1fr 1fr 1fr; }
-.quote-card > label { margin-bottom: 18px; }
+.quote-card > label, .enquiry-fields > label { margin-bottom: 18px; }
 .quote-card input, .quote-card textarea, .quote-card select { width: 100%; border: 0; border-bottom: 1px solid rgba(255,255,255,.18); border-radius: 0; padding: 12px 0; background: transparent; color: white; font-size: 14px; letter-spacing: 0; text-transform: none; }
 .quote-card input::placeholder, .quote-card textarea::placeholder { color: #617680; }
 .quote-card textarea { resize: vertical; }
@@ -326,7 +326,7 @@ h1 em, h2 em { color: var(--gold-light); font-style: normal; }
   .hero-content { transform: translateY(-61%); }
   .trust-strip { min-height: 92px; }
   .quote-card { padding: 28px; }
-  .form-row, .quote-card > label { margin-bottom: 12px; }
+  .form-row, .quote-card > label, .enquiry-fields > label { margin-bottom: 12px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -582,3 +582,6 @@ body:has(.route-site) { overflow: auto; }
   .route-final-cta h2 { margin-inline: 0; }
   .route-final-cta p:not(.route-kicker) { margin-inline: 0; }
 }
+
+.enquiry-fields { display: contents; border: 0; margin: 0; padding: 0; min-width: 0; }
+.quote-card button:disabled { opacity: .7; cursor: default; }

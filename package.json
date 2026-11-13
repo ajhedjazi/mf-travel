@@ -11,7 +11,8 @@
     "start": "next start",
     "lint": "eslint .",
     "test:seo": "node --test tests/rendered-html.test.mjs",
-    "test": "npm run build && npm run test:seo"
+    "test": "npm run build && npm run test:forms && npm run test:seo",
+    "test:forms": "node --test tests/enquiry.test.mjs"
   },
   "dependencies": {
     "next": "16.2.6",

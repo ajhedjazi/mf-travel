@@ -3,6 +3,7 @@
 import { FormEvent, MouseEvent, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import BrandLogo from "./brand-logo";
+import { submitEnquiry } from "./submit-enquiry";
 import { allAirportFares } from "./airport-transfers/route-data";
 import { businessId, businessSchema, fareInclusions, serializeSchema, serviceAreas, siteUrl, websiteId } from "./site-config";
 
@@ -117,7 +118,9 @@ export default function Home() {
   const [active, setActive] = useState("home");
   const [menuOpen, setMenuOpen] = useState(false);
   const [formMessage, setFormMessage] = useState("");
-  const [requestDraft, setRequestDraft] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [enquirySent, setEnquirySent] = useState(false);
+  const submissionInFlight = useRef(false);
   const [journeyDestination, setJourneyDestination] = useState("");
   const [automaticTheme, setAutomaticTheme] = useState<TimeTheme>("night");
   const [themeOverride, setThemeOverride] = useState<TimeTheme | null>(null);
@@ -200,40 +203,21 @@ export default function Home() {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (submissionInFlight.current || enquirySent) return;
+    submissionInFlight.current = true;
+    setIsSubmitting(true);
+    setFormMessage("");
     const data = new FormData(event.currentTarget);
-    const draft = [
-      "Hello MF Travel, I would like a quote.",
-      "",
-      `Pickup: ${data.get("pickup")}`,
-      `Destination: ${data.get("destination")}`,
-      `Date and time: ${data.get("date")} at ${data.get("time")}`,
-      `Passengers: ${data.get("passengers")}`,
-      `Luggage: ${data.get("luggage") || "Not stated"}`,
-      `Name: ${data.get("name")}`,
-      `Contact: ${data.get("contact")}`,
-      `Notes: ${data.get("notes") || "None"}`,
-    ].join("\n");
-
-    setRequestDraft(draft);
-
-    if (whatsappNumber) {
-      window.open(`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(draft)}`, "_blank", "noopener,noreferrer");
-      setFormMessage("Your request has been prepared and opened in WhatsApp. Check the details, then press send.");
-      return;
-    }
-
     try {
-      await navigator.clipboard.writeText(draft);
-      setFormMessage("Your request is ready and copied. The MF Travel booking number is being confirmed, so nothing has been sent yet.");
+      await submitEnquiry(data);
+      setEnquirySent(true);
+      setFormMessage("Thanks—your enquiry has been sent to MF Travel. We’ll contact you with availability and a quote. This is not a confirmed booking.");
     } catch {
-      setFormMessage("Your request is ready below. The MF Travel booking number is being confirmed, so nothing has been sent yet.");
+      setFormMessage("We couldn’t confirm receipt of your enquiry. Your details are still here. Please try again, or contact us using Call or WhatsApp.");
+    } finally {
+      submissionInFlight.current = false;
+      setIsSubmitting(false);
     }
-  };
-
-  const copyDraft = async () => {
-    if (!requestDraft) return;
-    await navigator.clipboard.writeText(requestDraft);
-    setFormMessage("Journey request copied.");
   };
 
   const structuredData = {
@@ -440,7 +424,7 @@ export default function Home() {
           <div className="panel-copy quote-copy">
             <Eyebrow>Request a quote</Eyebrow>
             <h2>Where can we<br /><em>take you?</em></h2>
-            <p className="lead">Give us the useful details once. The form prepares a clear request and never sends anything without you.</p>
+            <p className="lead">Send us your journey details and we’ll get back to you with availability and a quote.</p>
             {rawBookingNumber ? (
               <div className="contact-actions">
                 <a className="button button--line" href={`tel:${rawBookingNumber}`}><Icon name="phone" /> Call MF Travel</a>
@@ -448,10 +432,14 @@ export default function Home() {
                 {bookingEmail && <a className="button button--line" href={`mailto:${bookingEmail}`}><Icon name="mail" /> Email</a>}
               </div>
             ) : (
-              <div className="contact-pending"><Icon name="phone" /><p><strong>Booking line being confirmed</strong><span>Your request can be prepared now. Call and WhatsApp will appear here as soon as the shared business number is confirmed.</span></p></div>
+              <div className="contact-pending"><Icon name="phone" /><p><strong>Booking line being confirmed</strong><span>You can send your enquiry using the form. Call and WhatsApp will appear here as soon as the shared business number is confirmed.</span></p></div>
             )}
           </div>
-          <form className="quote-card" onSubmit={handleSubmit}>
+          <form className="quote-card" name="enquiry" method="POST" action="/__forms.html" onSubmit={handleSubmit} onChange={() => { if (!submissionInFlight.current) { setEnquirySent(false); setFormMessage(""); } }} aria-busy={isSubmitting}>
+            <input type="hidden" name="form-name" value="enquiry" />
+            <input type="hidden" name="subject" value="New MF Travel quote enquiry" />
+            <div hidden aria-hidden="true"><label>Leave this empty<input name="bot-field" tabIndex={-1} autoComplete="off" /></label></div>
+            <fieldset disabled={isSubmitting} className="enquiry-fields">
             <div className="form-row">
               <label>Pickup<input name="pickup" autoComplete="street-address" placeholder="Pickup address or area" required /></label>
               <label>Destination<input name="destination" value={journeyDestination} onChange={(event) => setJourneyDestination(event.target.value)} placeholder="Airport or destination" required /></label>
@@ -467,9 +455,9 @@ export default function Home() {
             </div>
             <label>Luggage<input name="luggage" placeholder="e.g. 2 large cases and 2 cabin bags" /></label>
             <label>Journey notes<textarea name="notes" rows={3} placeholder="Return leg, flight number, extra stops or anything else we should know" /></label>
-            <button className="button button--gold button--full" type="submit">{rawBookingNumber ? "Prepare in WhatsApp" : "Prepare quote request"} <Icon name="arrow" /></button>
+            <button className="button button--gold button--full" type="submit" disabled={isSubmitting || enquirySent}>{isSubmitting ? "Sending enquiry…" : enquirySent ? "Enquiry sent" : "Send enquiry"} <Icon name="arrow" /></button>
+            </fieldset>
             {formMessage && <p className="form-message" role="status">{formMessage}</p>}
-            {requestDraft && !rawBookingNumber && <div className="request-draft"><pre>{requestDraft}</pre><button type="button" onClick={copyDraft}><Icon name="copy" /> Copy request</button></div>}
           </form>
           <PanelCount current={8} />
         </section>
