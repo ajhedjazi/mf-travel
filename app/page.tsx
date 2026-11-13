@@ -425,6 +425,7 @@ export default function Home() {
             <Eyebrow>Request a quote</Eyebrow>
             <h2>Where can we<br /><em>take you?</em></h2>
             <p className="lead">Send us your journey details and we’ll get back to you with availability and a quote.</p>
+            <p className="lead">Prefer to call or WhatsApp? We can sometimes respond more quickly that way.</p>
             {rawBookingNumber ? (
               <div className="contact-actions">
                 <a className="button button--line" href={`tel:${rawBookingNumber}`}><Icon name="phone" /> Call MF Travel</a>
